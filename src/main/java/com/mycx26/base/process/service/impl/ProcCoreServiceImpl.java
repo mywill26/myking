@@ -1,0 +1,735 @@
+package com.mycx26.base.process.service.impl;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Maps;
+import com.mycx26.base.constant.SqlConstant;
+import com.mycx26.base.constant.Symbol;
+import com.mycx26.base.enump.QueryColType;
+import com.mycx26.base.enump.QueryFormType;
+import com.mycx26.base.enump.Yn;
+import com.mycx26.base.exception.DataException;
+import com.mycx26.base.exception.ParamException;
+import com.mycx26.base.process.constant.ProcConstant;
+import com.mycx26.base.process.entity.ProcDef;
+import com.mycx26.base.process.entity.ProcInst;
+import com.mycx26.base.process.entity.ProcLock;
+import com.mycx26.base.process.entity.ProcNode;
+import com.mycx26.base.process.entity.ProcViewCol;
+import com.mycx26.base.process.entity.ToDoCol;
+import com.mycx26.base.process.enump.InstanceStatus;
+import com.mycx26.base.process.enump.ProcFormType;
+import com.mycx26.base.process.enump.ProcViewColType;
+import com.mycx26.base.process.service.ProcBaseService;
+import com.mycx26.base.process.service.ProcCoreService;
+import com.mycx26.base.process.service.ProcDefService;
+import com.mycx26.base.process.service.ProcEngineService;
+import com.mycx26.base.process.service.ProcFlowNoService;
+import com.mycx26.base.process.service.ProcFormService;
+import com.mycx26.base.process.service.ProcInstService;
+import com.mycx26.base.process.service.ProcLockService;
+import com.mycx26.base.process.service.ProcModifyService;
+import com.mycx26.base.process.service.ProcNodeHandler;
+import com.mycx26.base.process.service.ProcNodeService;
+import com.mycx26.base.process.service.ProcViewColService;
+import com.mycx26.base.process.service.ToDoColService;
+import com.mycx26.base.process.service.bo.ApproveView;
+import com.mycx26.base.process.service.bo.ApproveWrapper;
+import com.mycx26.base.process.service.bo.ProcParamWrapper;
+import com.mycx26.base.process.service.bo.ProcTask;
+import com.mycx26.base.process.service.bo.ProcToDo;
+import com.mycx26.base.process.service.bo.ProcViewColBo;
+import com.mycx26.base.process.service.bo.ProcessAction;
+import com.mycx26.base.process.service.bo.ProcessLog;
+import com.mycx26.base.process.service.bo.ProcessStart;
+import com.mycx26.base.process.service.bo.ToDoColBo;
+import com.mycx26.base.process.service.bo.ToDoHeader;
+import com.mycx26.base.process.service.bo.ToDoQueryCol;
+import com.mycx26.base.process.service.query.ApproveViewQuery;
+import com.mycx26.base.process.service.query.TaskQuery;
+import com.mycx26.base.service.EnumValueService;
+import com.mycx26.base.service.ExternalEnumService;
+import com.mycx26.base.service.ExternalUserService;
+import com.mycx26.base.service.JdbcService;
+import com.mycx26.base.service.bo.ContextUser;
+import com.mycx26.base.service.bo.ParamWrapper;
+import com.mycx26.base.util.CollectionUtil;
+import com.mycx26.base.util.SpringUtil;
+import com.mycx26.base.util.SqlUtil;
+import com.mycx26.base.util.StringUtil;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Created by mycx26 on 2020/6/21.
+ */
+@Service
+public class ProcCoreServiceImpl implements ProcCoreService {
+
+    @Resource
+    private ProcFormService procFormService;
+
+    @Resource
+    private ProcInstService procInstService;
+
+    @Resource
+    private ProcFlowNoService procFlowNoService;
+
+    @Resource
+    private ProcEngineService procEngineService;
+
+    @Resource
+    private ProcNodeService procNodeService;
+
+    @Resource
+    private ExternalUserService externalUserService;
+
+    @Resource
+    private ProcDefService procDefService;
+
+    @Resource
+    private ToDoColService toDoColService;
+
+    @Resource
+    private JdbcService jdbcService;
+
+    @Resource
+    private ProcViewColService procViewColService;
+
+    @Resource
+    private EnumValueService enumValueService;
+
+    @Resource
+    private ProcLockService procLockService;
+
+    @Resource(name = "procBaseService")
+    private ProcBaseService procBaseService;
+
+    @Resource(name = "defaultNodeHandler")
+    private ProcNodeHandler procNodeHandler;
+
+    @Resource
+    private ProcModifyService procModifyService;
+
+    private ProcCoreService procCoreService;
+
+    private Map<String, ExternalEnumService> eEnumMap = new HashMap<>();
+
+    @PostConstruct
+    private void init() {
+        procCoreService = SpringUtil.getBean(ProcCoreServiceImpl.class);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String create(ProcParamWrapper procParamWrapper) {
+        createBaseValidate(procParamWrapper);
+        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
+
+        String flowNo = procParamWrapper.getFlowNo();
+        if (StringUtil.isBlank(flowNo)) {       // consider without flow number condition
+            flowNo = procFlowNoService.getFlowNo(procDef.getFlowNoPrefix());
+            procParamWrapper.setFlowNo(flowNo);
+        }
+        if (StringUtil.isBlank(procParamWrapper.getProcInstName())) {
+            String username = externalUserService.getNameByUserId(procParamWrapper.getUserId());
+            procParamWrapper.setProcInstName(username + "的" + procDef.getProcDefName() + "申请");
+        }
+
+        ProcInst procInst = new ProcInst()
+                .setProcInstName(procParamWrapper.getProcInstName())
+                .setProcDefKey(procDef.getProcDefKey())
+                .setFlowNo(flowNo)
+                .setStatusCode(procParamWrapper.getProcInstStatusCode())
+                .setCreatorId(procParamWrapper.getUserId());
+        procInstService.add(procInst);
+
+        procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);       // handle main form
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {      // handle sub form, if sub form configured, suit for simple process
+            procFormService.addSubForm(procDef.getSubForm(), procParamWrapper);
+            createResourceLock(procParamWrapper, procDef);
+        }
+
+        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {    // last, interaction with pe
+            String procInstId = start(procParamWrapper);
+            procInst.setProcInstId(procInstId);
+            procModifyService.completeProcInstId(procInst);
+        }
+
+        return flowNo;
+    }
+
+    private void createBaseValidate(ProcParamWrapper procParamWrapper) {
+        StringBuilder sb = validateProcDefAndUser(procParamWrapper);
+        if (StringUtil.isBlank(procParamWrapper.getProcInstStatusCode())) {
+            StringUtil.append(sb, "Process instance status code is required");
+        }
+
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
+    }
+
+    private void createResourceLock(ProcParamWrapper procParamWrapper, ProcDef procDef) {
+        if (procDef.getLockResource()    // resource lock if configured
+                && CollectionUtil.isNotEmpty(procParamWrapper.getSubItems())) {     // sub form data exist
+            procLockService.lock(procParamWrapper.getSubItems().stream()
+                    .filter(e -> StringUtil.isNotBlank((String) e.get(procDef.getResourceKey()))).map(e -> new ProcLock()
+                            .setResourceId((String) e.get(procDef.getResourceKey()))
+                            .setFlowNo(procParamWrapper.getFlowNo()))
+                    .collect(Collectors.toList())
+            );
+        }
+    }
+
+    @Override
+    public String start(ProcParamWrapper procParamWrapper) {
+        startValidate(procParamWrapper);
+
+        ProcBaseService service = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        Map<String, Object> vars;
+
+        if (service != null) {
+            vars = service.setStartVar(procParamWrapper);
+        } else {
+            vars = procBaseService.setStartVar(procParamWrapper);
+        }
+
+        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
+
+        ProcessStart start = new ProcessStart()
+                .setProcDefKey(procDef.getEngineKey())
+                .setName(procParamWrapper.getProcInstName())
+                .setCreatorId(procParamWrapper.getUserId())
+                .setVars(vars);
+
+        return procEngineService.startProcess(start);
+    }
+
+    private void startValidate(ProcParamWrapper procParamWrapper) {
+        StringBuilder sb = validateProcDefAndUser(procParamWrapper);
+        if (StringUtil.isBlank(procParamWrapper.getProcInstName())) {
+            StringUtil.append(sb, "Process instance name is required");
+        }
+
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
+    }
+
+    private StringBuilder validateProcDefAndUser(ProcParamWrapper procParamWrapper) {
+        StringBuilder sb = new StringBuilder();
+
+        if (StringUtil.isBlank(procParamWrapper.getProcDefKey())) {
+            StringUtil.append(sb, "Process definition key is required");
+        } else {
+            ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
+            if (null == procDef) {
+                throw new ParamException("Process definition key not exist");
+            }
+        }
+        if (StringUtil.isBlank(procParamWrapper.getUserId())) {
+            StringUtil.append(sb, "User id is required");
+        }
+
+        return sb;
+    }
+
+    @Override
+    public List<ToDoHeader> getToDoHeaders(String userId) {
+        Map<String, ToDoHeader> collect = procDefService.list(Wrappers.<ProcDef>lambdaQuery()
+                .eq(ProcDef::getInternal, Yn.YES.getCode()).orderByAsc(ProcDef::getOrderNo)).stream()
+                .collect(Collectors.toMap(ProcDef::getEngineKey,
+                        v -> new ToDoHeader().setProcDefKey(v.getProcDefKey()).setProcDefName(v.getProcDefName()).setCount(0),
+                        (e1, e2) -> e2, LinkedHashMap::new
+                ));
+        if (collect.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ToDoHeader> headers = procEngineService.getToDoHeaders(userId);
+        if (headers.isEmpty()) {
+            return new ArrayList<>(collect.values());
+        }
+
+        Map<String, ToDoHeader> engineCollect = headers.stream().collect(Collectors.toMap(ToDoHeader::getProcDefKey, v -> v));
+        collect.forEach((k, v) -> {
+            if (engineCollect.get(k) != null) {
+                v.setCount(engineCollect.get(k).getCount());
+            }
+        });
+
+        return new ArrayList<>(collect.values());
+    }
+
+    @Override
+    public ProcToDo getToDo(TaskQuery taskQuery) {
+        if (StringUtil.isAnyBlank(taskQuery.getProcDefKey(), taskQuery.getUserId())) {
+            return new ProcToDo();
+        }
+
+        ProcDef procDef = procDefService.getByKey(taskQuery.getProcDefKey());
+        taskQuery.setProcDefKey(procDef.getEngineKey());
+        List<ProcTask> tasks = procEngineService.getToDoTasks(taskQuery);
+        List<ToDoCol> toDoCols = toDoColService.getByProcAndFormType(procDef.getProcDefKey(), QueryFormType.LIST.getCode());
+        if (toDoCols.isEmpty()) {
+            throw new DataException("To do list columns config error");
+        }
+
+        List<Map<String, Object>> toDoList = Collections.emptyList();
+
+        if (!tasks.isEmpty()) {
+            StringBuilder endClause = handleToDoQueryParams(procDef.getProcDefKey(), taskQuery.getParams());
+            String tblName = toDoCols.get(0).getTblName();
+            String switchTblName = handleSwitchTable(procDef.getProcDefKey(), taskQuery.getParams(), endClause);
+            endClause.append(SqlConstant.ORDER_BY).append("pi.create_time");
+            if (StringUtil.isNotBlank(switchTblName)) {
+                tblName = switchTblName;
+            }
+            toDoList = jdbcService.selectListIn(tblName,
+                    toDoCols.stream().map(ToDoCol::getColCode).collect(Collectors.toList()),
+                    "pi.proc_inst_id",
+                    tasks.stream().map(e -> (Object) e.getProcInstId()).toArray(),
+                    taskQuery.getParams(),
+                    endClause
+            );
+
+            Map<String, ProcTask> instIdTaskMap = tasks.stream().collect(Collectors.toMap(ProcTask::getProcInstId, v -> v, (k1, k2) -> k1));
+            toDoList.forEach(item -> supplyToDo(item, instIdTaskMap, procDef));
+
+            // translate
+            Map<String, List<ToDoCol>> collect = toDoCols.stream().collect(Collectors.groupingBy(ToDoCol::getColTypeCode));
+            List<ToDoCol> enumCols = collect.get(ProcViewColType.ENUM.getCode());
+            List<ToDoCol> exEnumCols = collect.get(ProcViewColType.E_ENUM.getCode());
+            toDoList.forEach(toDo -> {
+                if (enumCols != null) {
+                    enumCols.forEach(enumCol -> handleEnumCol(toDo, enumCol.getPropName(), enumCol.getEnumTypeCode()));
+                }
+                if (exEnumCols != null) {
+                    exEnumCols.forEach(exEnumCol -> handleExEnumCol(toDo, exEnumCol.getPropName(), exEnumCol.getEnumTypeCode()));
+                }
+            });
+        }
+
+        List<ToDoColBo> toDoColBos = toDoCols.stream().map(e -> new ToDoColBo().setPropName(e.getPropName())
+                .setColName(e.getColName())
+                .setDisplay(e.getDisplay())
+        ).collect(Collectors.toList());
+
+        return new ProcToDo().setProcDefKey(taskQuery.getProcDefKey())
+                .setToDoCols(toDoColBos)
+                .setToDoList(toDoList)
+                .setTotal(toDoList.size());
+    }
+
+    private StringBuilder handleToDoQueryParams(String procDefKey, Map<String, Object> params) {
+        List<ToDoCol> queryCols = toDoColService.getByProcAndFormType(procDefKey, QueryFormType.QUERY.getCode());
+        StringBuilder endClause = new StringBuilder();
+
+        queryCols.forEach(e -> {
+            if (null == params.get(e.getColCode())) {
+                params.remove(e.getColCode());
+                return;
+            }
+
+            if (QueryColType.STRING_FUZZY.getCode().equals(e.getColTypeCode())) {
+                endClause
+                        .append(SqlConstant.AND)
+                        .append(e.getColCode())
+                        .append(SqlConstant.LIKE)
+                        .append(String.format(SqlConstant.LIKE_ALL, params.get(e.getColCode())));
+                params.remove(e.getColCode());
+            }
+        });
+
+        return endClause;
+    }
+
+    private String handleSwitchTable(String procDefKey, Map<String, Object> params, StringBuilder endClause) {
+        List<ToDoCol> queryCols = toDoColService.getByProcAndFormType(procDefKey, QueryFormType.QUERY.getCode());
+        String tblName = null;
+        for (ToDoCol toDoCol : queryCols) {
+            if (StringUtil.isNotBlank(toDoCol.getTblName()) && params.get(toDoCol.getColCode()) != null) {
+                tblName = toDoCol.getTblName();
+                if (StringUtil.isNotBlank(toDoCol.getEndClause())) {
+                    endClause.append(Symbol.SPACE).append(toDoCol.getEndClause());
+                }
+                break;
+            }
+        }
+
+        return tblName;
+    }
+
+    private void supplyToDo(Map<String, Object> item, Map<String, ProcTask> instIdTaskMap, ProcDef procDef) {
+        String procInstId = (String) item.get(ProcConstant.PROC_INST_ID);
+        item.put(ProcConstant.NODE_KEY, instIdTaskMap.get(procInstId).getCurTaskKey());
+        item.put(ProcConstant.NODE_NAME, instIdTaskMap.get(procInstId).getCurTaskName());
+        item.put(ProcConstant.TASK_ID, instIdTaskMap.get(procInstId).getCurTaskId());
+        item.put(ProcConstant.VIEW_KEY, procNodeService
+                .getViewKeyByProcDefKeyAndNodeKey(procDef.getProcDefKey(), instIdTaskMap.get(procInstId).getCurTaskKey()));
+    }
+
+    @Override
+    public List<ToDoQueryCol> getToDoQueryCols(String procDefKey) {
+        if (StringUtil.isBlank(procDefKey)) {
+            return Collections.emptyList();
+        }
+
+        return toDoColService.list(Wrappers.<ToDoCol>lambdaQuery().select(ToDoCol::getColCode,
+                ToDoCol::getColName,
+                ToDoCol::getColTypeCode,
+                ToDoCol::getEnumTypeCode,
+                ToDoCol::getDisplay).eq(ToDoCol::getProcDefKey, procDefKey)
+                .eq(ToDoCol::getFormTypeCode, QueryFormType.QUERY.getCode())
+                .eq(ToDoCol::getYn, Yn.YES.getCode())
+                .orderByAsc(ToDoCol::getOrderNo), e -> new ToDoQueryCol().setColCode(e.getColCode())
+                .setColName(e.getColName())
+                .setColTypeCode(e.getColTypeCode())
+                .setDisplay(e.getDisplay())
+        );
+    }
+
+    @Override
+    public ApproveView getApproveView(ApproveViewQuery approveViewQuery) {
+        if (StringUtil.isAnyBlank(approveViewQuery.getProcInstId(), approveViewQuery.getNodeKey())) {
+            return null;
+        }
+
+        ProcInst procInst = procInstService.getByProcInstId(approveViewQuery.getProcInstId());
+        ProcNode procNode = procNodeService.getByProcDefKeyAndNodeKey(procInst.getProcDefKey(), approveViewQuery.getNodeKey());
+
+        ApproveView approveView = new ApproveView().setViewKey(procNode.getViewKey())
+                .setProcInstId(approveViewQuery.getProcInstId())
+                .setProcInstStatusCode(procInst.getStatusCode());
+
+        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+
+        approveView.setProcDesc(procDef.getDescription());
+        approveView.setNodeTips(procNode.getTips());
+        approveView.setApprove(procNode.getApprove());
+        approveView.setRejectPrevious(procNode.getRejectPrevious());
+        approveView.setRejectFirst(procNode.getRejectFirst());
+
+        // handle process log
+        approveView.setLogs(procEngineService.getProcLogs(approveViewQuery.getProcInstId()));
+
+        return handleParamWrapper(procInst, approveView);
+    }
+
+    private ApproveView handleParamWrapper(ProcInst procInst, ApproveView approveView) {
+        Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(approveView.getViewKey())
+                .stream().collect(Collectors.groupingBy(ProcViewCol::getFormTypeCode));
+
+        if (collect.isEmpty()) {
+            throw new DataException("View config error");
+        }
+
+        ParamWrapper paramWrapper = new ParamWrapper();
+        paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), procInst.getFlowNo()));
+        paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
+
+        approveView.setParamWrapper(paramWrapper);
+
+        return approveView;
+    }
+
+    @Override
+    public ApproveView getDetailView(String procInstId) {
+        if (StringUtil.isBlank(procInstId)) {
+            return null;
+        }
+
+        ApproveView approveView = new ApproveView().setProcInstId(procInstId);
+
+        ProcInst procInst = procInstService.getByProcInstId(procInstId);
+        if (null == procInst) {
+            procInst = procInstService.getByFlowNo(procInstId);
+        }
+        approveView.setProcInstStatusCode(procInst.getStatusCode());
+
+        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
+
+        ProcNode first = procNodeService.getFirst(procDef.getProcDefKey());     // first node tips
+        approveView.setNodeTips(first.getTips());
+        approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
+
+        return handleParamWrapper(procInst, approveView);
+    }
+
+    private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {
+        Map<String, Object> clauses = new HashMap<>(1);
+        clauses.put("pi.flow_no", flowNo);
+        Map<String, Object> mainForm = jdbcService.selectMap2(mainCols.get(0).getTblName(),
+                mainCols.stream().map(ProcViewCol::getColCode).collect(Collectors.toList()),
+                clauses
+        );
+
+        Map<String, List<ProcViewCol>> collect = mainCols.stream().collect(Collectors.groupingBy(ProcViewCol::getColTypeCode));
+
+        List<ProcViewCol> enumCols = collect.get(ProcViewColType.ENUM.getCode());
+        if (enumCols != null) {
+            enumCols.forEach(enumCol -> handleEnumCol(mainForm, enumCol.getPropName(), enumCol.getEnumTypeCode()));
+        }
+        List<ProcViewCol> eEnumCols = collect.get(ProcViewColType.E_ENUM.getCode());
+        if (eEnumCols != null) {
+            eEnumCols.forEach(eEnumCol -> handleExEnumCol(mainForm, eEnumCol.getPropName(), eEnumCol.getEnumTypeCode()));
+        }
+
+        return mainForm;
+    }
+
+    private void handleEnumCol(Map<String, Object> item, String procName, String enumTypeCode) {
+        if (item.get(procName) != null) {
+            item.put(procName, enumValueService.getNameByTypeAndValueCode(enumTypeCode, (String) item.get(procName)));
+        }
+    }
+
+    private void handleExEnumCol(Map<String, Object> item, String procName, String enumTypeCode) {
+        if (item.get(procName) != null) {
+            if (null == eEnumMap.get(enumTypeCode)) {
+                eEnumMap.put(enumTypeCode, SpringUtil.getBean(enumTypeCode));
+            }
+            ExternalEnumService externalEnumService = eEnumMap.get(enumTypeCode);
+            item.put(procName, externalEnumService.getNameByCode((String) item.get(procName)));
+        }
+    }
+
+    private List<Map<String, Object>> handleSubForm(List<ProcViewCol> subCols, String flowNo) {
+        Map<String, Object> clauses = new HashMap<>(1);
+        clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
+        List<Map<String, Object>> subItems = jdbcService.selectList2(subCols.get(0).getTblName(),
+                subCols.stream().map(ProcViewCol::getColCode).collect(Collectors.toList()),
+                clauses
+        );
+
+        Map<String, List<ProcViewCol>> collect = subCols.stream().collect(Collectors.groupingBy(ProcViewCol::getColTypeCode));
+
+        List<ProcViewCol> enumCols = collect.get(ProcViewColType.ENUM.getCode());
+        if (enumCols != null) {
+            subItems.forEach(item -> enumCols.forEach(enumCol -> handleEnumCol(item, enumCol.getPropName(), enumCol.getEnumTypeCode())));
+        }
+        List<ProcViewCol> eEnumCols = collect.get(ProcViewColType.E_ENUM.getCode());
+        if (eEnumCols != null) {
+            subItems.forEach(item -> eEnumCols.forEach(eEnumCol -> handleExEnumCol(item, eEnumCol.getPropName(), eEnumCol.getEnumTypeCode())));
+        }
+
+        return subItems;
+    }
+
+    @Override
+    public void approve(ApproveWrapper approveWrapper) {
+        Map<String, Object> vars = procCoreService.approvePreHandle(approveWrapper);
+
+        ProcessAction processAction = new ProcessAction()
+                .setProcInstId(approveWrapper.getProcInstId())
+                .setUserId(approveWrapper.getUserId())
+                .setTaskId(approveWrapper.getTaskId())
+                .setComment(approveWrapper.getComment())
+                .setVars(vars);
+
+        procEngineService.approve(processAction);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Map<String, Object> approvePreHandle(ApproveWrapper approveWrapper) {
+        ProcNodeHandler handler = preHandle(approveWrapper);
+        Map<String, Object> vars;
+        if (null == handler) {
+            handler = procNodeHandler;
+        }
+
+        handler.approveValidate(approveWrapper);
+
+        handler.handleMainForm(approveWrapper);
+        handler.handleSubForm(approveWrapper);
+        handler.handleBizForm(approveWrapper);
+
+        vars = handler.handleVars(approveWrapper);  // after handle form
+
+        return vars;
+    }
+
+    private ProcNodeHandler preHandle(ApproveWrapper approveWrapper) {
+        ProcInst procInst = approveValidate(approveWrapper);
+
+        approveWrapper.setFlowNo(procInst.getFlowNo());     // set flow no
+        approveWrapper.setProcDef(procDefService.getByKey(procInst.getProcDefKey()));   // set process definition
+        approveWrapper.setMainForm(null == approveWrapper.getMainForm() ? Maps.newHashMap() : approveWrapper.getMainForm());
+
+        ProcNode procNode = validateNode(approveWrapper);
+
+        return SpringUtil.getBean2(procNode.getNodeHandler());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void rejectPrevious(ApproveWrapper approveWrapper) {
+        rejectValidate(approveWrapper);
+        ProcNodeHandler handler = preHandle(approveWrapper);
+
+        if (null == handler) {
+            handler = procNodeHandler;
+        }
+        handler.rejectPreviousHandle(approveWrapper);
+
+        ProcessAction processAction = new ProcessAction()
+                .setProcInstId(approveWrapper.getProcInstId())
+                .setUserId(approveWrapper.getUserId())
+                .setTaskId(approveWrapper.getTaskId())
+                .setComment(approveWrapper.getComment())
+                .setVars(null);
+
+        procEngineService.rejectPrevious(processAction);
+    }
+
+    private void rejectValidate(ApproveWrapper approveWrapper) {
+        if (StringUtil.isBlank(approveWrapper.getComment())) {
+            throw new ParamException("Comment is required");
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void rejectFirst(ApproveWrapper approveWrapper) {
+        rejectValidate(approveWrapper);
+        ProcNodeHandler handler = preHandle(approveWrapper);
+
+        if (null == handler) {
+            handler = procNodeHandler;
+        }
+        handler.rejectFirstHandle(approveWrapper);
+
+        ProcessAction processAction = new ProcessAction()
+                .setProcInstId(approveWrapper.getProcInstId())
+                .setUserId(approveWrapper.getUserId())
+                .setTaskId(approveWrapper.getTaskId())
+                .setComment(approveWrapper.getComment())
+                .setVars(null);
+
+        procEngineService.rejectFirst(processAction);
+    }
+
+    private ProcInst approveValidate(ApproveWrapper approveWrapper) {
+        StringBuilder sb = new StringBuilder();
+        ProcInst procInst = null;
+
+        if (StringUtil.isBlank(approveWrapper.getProcInstId())) {   // which form
+            StringUtil.append(sb, "Process instance id is required");
+        } else {
+            procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
+            if (null == procInst) {
+                throw new DataException("Process instance not exist");
+            }
+        }
+        if (StringUtil.isBlank(approveWrapper.getTaskId())) {   // which task
+            StringUtil.append(sb, "Task id is required");
+        }
+        if (StringUtil.isBlank(approveWrapper.getUserId())) {   // who
+            StringUtil.append(sb, "User id is required");
+        }
+
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
+
+        return procInst;
+    }
+
+    private ProcNode validateNode(ApproveWrapper approveWrapper) {
+        ProcNode procNode = procNodeService
+                .getByProcDefKeyAndNodeKey(approveWrapper.getProcDef().getProcDefKey(), approveWrapper.getNodeKey());
+        if (null == procNode) {
+            throw new DataException("Process node not exist");
+        }
+
+        return procNode;
+    }
+
+    @Override
+    public ApproveView getApproveViewWithViewCol(ApproveViewQuery approveViewQuery) {
+        ApproveView approveView = getApproveView(approveViewQuery);     // separate
+        if (null == approveView) {
+            return null;
+        }
+
+        handleProcLog(approveView);
+        return addViewCol(approveView);
+    }
+
+    private void handleProcLog(ApproveView approveView) {
+        if (CollectionUtil.isEmpty(approveView.getLogs())) {
+            return;
+        }
+
+        approveView.getLogs().forEach(e -> {
+            ContextUser user = externalUserService.getByUserId(e.getUserId());
+            e.setAvatarUrl(user != null ? user.getAvatarUrl() : null);
+        });
+
+        List<ProcessLog> predictLogs = procEngineService.getProcLogsWithPredict(approveView.getProcInstId());
+        if (!predictLogs.isEmpty()) {
+            approveView.getLogs().addAll(predictLogs);
+        }
+    }
+
+    private ApproveView addViewCol(ApproveView approveView) {
+        Map<String, List<ProcViewColBo>> collect = procViewColService.list(Wrappers.<ProcViewCol>lambdaQuery()
+                        .select(ProcViewCol::getFormTypeCode,
+                                ProcViewCol::getPropName,
+                                ProcViewCol::getColName,
+                                ProcViewCol::getColTypeCode,
+                                ProcViewCol::getEnumTypeCode,
+                                ProcViewCol::getDisplay,
+                                ProcViewCol::getMobileDisplay,
+                                ProcViewCol::getOrderNo,
+                                ProcViewCol::getEditable)
+                        .eq(ProcViewCol::getViewKey, approveView.getViewKey())
+                        .eq(ProcViewCol::getYn, Yn.YES.getCode())
+                        .orderByAsc(ProcViewCol::getOrderNo),
+                e -> new ProcViewColBo()
+                        .setFormTypeCode(e.getFormTypeCode())
+                        .setPropName(e.getPropName())
+                        .setColName(e.getColName())
+                        .setColTypeCode(e.getColTypeCode())
+                        .setEnumTypeCode(e.getEnumTypeCode())
+                        .setDisplay(e.getDisplay())
+                        .setMobileDisplay(e.getMobileDisplay())
+                        .setOrderNo(e.getOrderNo())
+                        .setEditable(e.getEditable())
+        ).stream().collect(Collectors.groupingBy(ProcViewColBo::getFormTypeCode));
+        if (collect.get(ProcFormType.MAIN.getCode()) != null) {
+            approveView.setMainViewCols(collect.get(ProcFormType.MAIN.getCode()));
+        }
+        if (collect.get(ProcFormType.SUB.getCode()) != null) {
+            approveView.setSubViewCols(collect.get(ProcFormType.SUB.getCode()));
+        }
+
+        return approveView;
+    }
+
+    @Override
+    public ApproveView getDetailViewWithViewCol(String procInstId) {
+        ApproveView approveView = getDetailView(procInstId);
+        if (null == approveView) {
+            return null;
+        }
+
+        handleProcLog(approveView);
+        return addViewCol(approveView);
+    }
+}

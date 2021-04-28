@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mycx26.base.process.mapper.ProcInstMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.mycx26.base.process.entity.ProcInst">
+        <id column="id" property="id" />
+        <result column="proc_inst_id" property="procInstId" />
+        <result column="proc_inst_name" property="procInstName" />
+        <result column="proc_def_key" property="procDefKey" />
+        <result column="flow_no" property="flowNo" />
+        <result column="status_code" property="statusCode" />
+        <result column="creator_id" property="creatorId" />
+        <result column="creator" property="creator" />
+        <result column="creator_email" property="creatorEmail" />
+        <result column="creator_dept" property="creatorDept" />
+        <result column="create_time" property="createTime" />
+        <result column="end_time" property="endTime" />
+        <result column="modify_time" property="modifyTime" />
+        <result column="yn" property="yn" />
+    </resultMap>
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, proc_inst_id, proc_inst_name, proc_def_key, flow_no, status_code,
+        creator_id, creator, creator_email, creator_dept, create_time, end_time, modify_time, yn
+    </sql>
+
+</mapper>

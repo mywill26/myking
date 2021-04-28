@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mycx26.base.process.mapper.ProcNodeVarMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.mycx26.base.process.entity.ProcNodeVar">
+        <id column="id" property="id" />
+        <result column="proc_def_key" property="procDefKey" />
+        <result column="node_key" property="nodeKey" />
+        <result column="var_name" property="varName" />
+        <result column="creator_id" property="creatorId" />
+        <result column="create_time" property="createTime" />
+        <result column="modifier_id" property="modifierId" />
+        <result column="modify_time" property="modifyTime" />
+        <result column="yn" property="yn" />
+    </resultMap>
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, proc_def_key, node_key, var_name, creator_id, create_time, modifier_id, modify_time, yn
+    </sql>
+
+</mapper>

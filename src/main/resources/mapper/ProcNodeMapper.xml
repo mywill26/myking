@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mycx26.base.process.mapper.ProcNodeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.mycx26.base.process.entity.ProcNode">
+        <id column="id" property="id" />
+        <result column="node_key" property="nodeKey" />
+        <result column="node_name" property="nodeName" />
+        <result column="proc_def_key" property="procDefKey" />
+        <result column="category_code" property="categoryCode" />
+        <result column="node_handler" property="nodeHandler" />
+        <result column="assignees_var" property="assigneesVar" />
+        <result column="assignee_type_code" property="assigneeTypeCode" />
+        <result column="role_code" property="roleCode" />
+        <result column="view_key" property="viewKey" />
+        <result column="approve_name" property="approveName" />
+        <result column="is_approve" property="approve" />
+        <result column="is_reject_previous" property="rejectPrevious" />
+        <result column="is_reject_first" property="rejectFirst" />
+        <result column="is_first" property="first" />
+        <result column="tips" property="tips" />
+        <result column="creator_id" property="creatorId" />
+        <result column="create_time" property="createTime" />
+        <result column="modifier_id" property="modifierId" />
+        <result column="modify_time" property="modifyTime" />
+        <result column="yn" property="yn" />
+    </resultMap>
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, node_key, node_name, proc_def_key, category_code, node_handler, assignees_var, assignee_type_code,
+        role_code, view_key, approve_name, is_approve, is_reject_previous, is_reject_first, is_first, tips,
+        creator_id, create_time, modifier_id, modify_time, yn
+    </sql>
+
+    <insert id="init" parameterType="list" >
+        insert into flow_proc_node
+        (
+        node_key,node_name,proc_def_key,creator_id
+        )
+        values
+        <foreach collection="list" item="item" separator=",">
+        (
+        #{item.nodeKey},#{item.nodeName},#{item.procDefKey},#{item.creatorId}
+        )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        node_name = values(node_name),
+        modifier_id = values(modifier_id)
+    </insert>
+
+    <select id="getByCategoryCode" parameterType="String" resultType="com.mycx26.base.process.entity.ProcNode">
+        select
+        pn.node_key,
+        pn.node_handler,
+        pd.engine_key
+        from flow_proc_node pn, flow_proc_def pd
+        where pn.proc_def_key = pd.proc_def_key
+        and  pn.category_code = #{categoryCode}
+        and pn.yn = 1
+    </select>
+
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mycx26.base.process.mapper.ProcColumnMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.mycx26.base.process.entity.ProcColumn">
+        <id column="id" property="id" />
+        <result column="tbl_name" property="tblName" />
+        <result column="col_name" property="colName" />
+        <result column="prop_name" property="propName" />
+        <result column="is_required" property="required" />
+        <result column="is_added" property="added" />
+        <result column="creator_id" property="creatorId" />
+        <result column="create_time" property="createTime" />
+        <result column="modifier_id" property="modifierId" />
+        <result column="modify_time" property="modifyTime" />
+        <result column="yn" property="yn" />
+    </resultMap>
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, tbl_name, col_name, prop_name, is_required, is_add,
+        creator_id, create_time, modifier_id, modify_time, yn
+    </sql>
+
+</mapper>
