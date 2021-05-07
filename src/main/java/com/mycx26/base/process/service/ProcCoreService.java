@@ -40,7 +40,7 @@ public interface ProcCoreService {
 
     void approve(ApproveWrapper approveWrapper);
 
-    Map<String, Object> approvePreHandle(ApproveWrapper approveWrapper);
+    Map<String, Object> doApprove(ApproveWrapper approveWrapper);
 
     void rejectPrevious(ApproveWrapper approveWrapper);
 

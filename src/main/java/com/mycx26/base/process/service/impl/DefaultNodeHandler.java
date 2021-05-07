@@ -8,7 +8,7 @@ import com.mycx26.base.process.service.ProcNodeHandler;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -35,7 +35,7 @@ public class DefaultNodeHandler extends ProcNodeHandler {
 
     @Override
     public Map<String, Object> handleVars(ApproveWrapper approveWrapper) {
-        return new HashMap<>();
+        return Collections.emptyMap();
     }
 
     @Override

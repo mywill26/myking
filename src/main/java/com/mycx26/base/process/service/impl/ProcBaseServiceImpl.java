@@ -33,6 +33,10 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     }
 
     @Override
+    public void afterCreate(ProcParamWrapper procParamWrapper) {
+    }
+
+    @Override
     public void endPostHandle(String procInstId) {
         ProcInst procInst = procInstService.end(procInstId);
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());

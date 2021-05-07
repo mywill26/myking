@@ -34,6 +34,14 @@ public abstract class ProcBaseService {
     // set process start variables and return
     public abstract Map<String, Object> setStartVar(ProcParamWrapper procParamWrapper);
 
+    /**
+     * Callback after completion of create process.
+     * The execution failure does not affect the main process.
+     *
+     * @param procParamWrapper create param
+     */
+    public abstract void afterCreate(ProcParamWrapper procParamWrapper);
+
     // process end postHandle
     public abstract void endPostHandle(String procInstId);
 

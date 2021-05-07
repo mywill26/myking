@@ -56,6 +56,7 @@ import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,14 +112,14 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Resource
     private ProcLockService procLockService;
 
-    @Resource(name = "procBaseService")
-    private ProcBaseService procBaseService;
-
     @Resource(name = "defaultNodeHandler")
     private ProcNodeHandler procNodeHandler;
 
     @Resource
     private ProcModifyService procModifyService;
+
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     private ProcCoreService procCoreService;
 
@@ -197,23 +198,18 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         startValidate(procParamWrapper);
 
         ProcBaseService service = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
-        Map<String, Object> vars;
-
-        if (service != null) {
-            vars = service.setStartVar(procParamWrapper);
-        } else {
-            vars = procBaseService.setStartVar(procParamWrapper);
-        }
+        Map<String, Object> vars = service.setStartVar(procParamWrapper);
 
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
-
         ProcessStart start = new ProcessStart()
                 .setProcDefKey(procDef.getEngineKey())
                 .setName(procParamWrapper.getProcInstName())
                 .setCreatorId(procParamWrapper.getUserId())
                 .setVars(vars);
 
-        return procEngineService.startProcess(start);
+        String procInstId = procEngineService.startProcess(start);
+        threadPoolTaskExecutor.submit(() -> service.afterCreate(procParamWrapper));
+        return procInstId;
     }
 
     private void startValidate(ProcParamWrapper procParamWrapper) {
@@ -531,7 +527,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     @Override
     public void approve(ApproveWrapper approveWrapper) {
-        Map<String, Object> vars = procCoreService.approvePreHandle(approveWrapper);
+        Map<String, Object> vars = procCoreService.doApprove(approveWrapper);
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -545,20 +541,18 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Map<String, Object> approvePreHandle(ApproveWrapper approveWrapper) {
+    public Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
         ProcNodeHandler handler = preHandle(approveWrapper);
-        Map<String, Object> vars;
-        if (null == handler) {
-            handler = procNodeHandler;
+        Map<String, Object> vars = Collections.emptyMap();
+        if (handler != null) {
+            handler.approveValidate(approveWrapper);
+
+            handler.handleMainForm(approveWrapper);
+            handler.handleSubForm(approveWrapper);
+            handler.handleBizForm(approveWrapper);
+
+            vars = handler.handleVars(approveWrapper);  // after handle form
         }
-
-        handler.approveValidate(approveWrapper);
-
-        handler.handleMainForm(approveWrapper);
-        handler.handleSubForm(approveWrapper);
-        handler.handleBizForm(approveWrapper);
-
-        vars = handler.handleVars(approveWrapper);  // after handle form
 
         return vars;
     }
@@ -581,10 +575,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         rejectValidate(approveWrapper);
         ProcNodeHandler handler = preHandle(approveWrapper);
 
-        if (null == handler) {
-            handler = procNodeHandler;
+        if (handler != null) {
+            handler.rejectPreviousHandle(approveWrapper);
         }
-        handler.rejectPreviousHandle(approveWrapper);
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
