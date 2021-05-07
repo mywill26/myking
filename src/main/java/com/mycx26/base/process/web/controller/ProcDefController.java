@@ -23,7 +23,7 @@ import java.util.List;
  * @since 2020-05-22
  */
 @RestController
-@RequestMapping("${proc-prefix}/def")
+@RequestMapping("flow/def")
 public class ProcDefController {
 
     @Resource

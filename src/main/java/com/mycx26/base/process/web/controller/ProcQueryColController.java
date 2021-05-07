@@ -23,7 +23,7 @@ import java.util.Map;
  * @since 2021-01-04
  */
 @RestController
-@RequestMapping("${proc-prefix}/querycol")
+@RequestMapping("flow/querycol")
 public class ProcQueryColController {
 
     @Resource

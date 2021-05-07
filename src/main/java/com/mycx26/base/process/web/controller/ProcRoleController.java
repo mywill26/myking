@@ -21,7 +21,7 @@ import javax.annotation.Resource;
  * @since 2020-06-28
  */
 @RestController
-@RequestMapping("${proc-prefix}/role")
+@RequestMapping("flow/role")
 public class ProcRoleController {
 
     @Resource

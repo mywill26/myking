@@ -20,7 +20,7 @@ import javax.annotation.Resource;
  * @since 2020-05-22
  */
 @RestController
-@RequestMapping("${proc-prefix}/inst")
+@RequestMapping("flow/inst")
 public class ProcInstController {
 
     @Resource

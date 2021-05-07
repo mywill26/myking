@@ -13,7 +13,7 @@ import javax.annotation.Resource;
  * @since 2020-06-21
  */
 @RestController
-@RequestMapping("${proc-prefix}/query")
+@RequestMapping("flow/query")
 public class ProcQueryController {
 
     @Resource

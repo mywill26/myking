@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Created by mycx26 on 2020/7/11.
  */
-@RequestMapping("${proc-prefix}/core")
+@RequestMapping("flow/core")
 @RestController
 public class ProcCoreController {
 
