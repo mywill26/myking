@@ -26,11 +26,11 @@
 
     <groupId>com.jd.mycx26</groupId>
     <artifactId>myking-spring-boot-starter</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>myking-spring-boot-starter</name>
 
     <properties>
-        <mybatch-spring-boot-starter.version>1.0.1</mybatch-spring-boot-starter.version>
+        <mybatch-spring-boot-starter.version>1.0.2</mybatch-spring-boot-starter.version>
     </properties>
 
     <dependencyManagement>
