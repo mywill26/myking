@@ -2,6 +2,7 @@ package com.mycx26.base.process.web.controller;
 
 import com.mycx26.base.context.UserContext;
 import com.mycx26.base.process.service.ProcCoreService;
+import com.mycx26.base.process.service.ProcViewService;
 import com.mycx26.base.process.service.bo.ApproveView;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
@@ -29,30 +30,33 @@ public class ProcCoreController {
     @Resource
     private ProcCoreService procCoreService;
 
+    @Resource
+    private ProcViewService procViewService;
+
     @RequestMapping("getToDoHeaders")
     public Message<List<ToDoHeader>> getToDoHeaders() {
-        return Message.success(procCoreService.getToDoHeaders(UserContext.getUserId()));
+        return Message.success(procViewService.getToDoHeaders(UserContext.getUserId()));
     }
 
     @RequestMapping("getToDo")
     public Message<ProcToDo> getToDo(@RequestBody TaskQuery taskQuery) {
         taskQuery.setUserId(UserContext.getUserId());
-        return Message.success(procCoreService.getToDo(taskQuery));
+        return Message.success(procViewService.getToDo(taskQuery));
     }
 
     @RequestMapping("getToDoQueryCols")
     public Message<List<ToDoQueryCol>> getToDoQueryCols(String procDefKey) {
-        return Message.success(procCoreService.getToDoQueryCols(procDefKey));
+        return Message.success(procViewService.getToDoQueryCols(procDefKey));
     }
 
     @RequestMapping("getApproveView")
     public Message<ApproveView> getApproveView(ApproveViewQuery approveViewQuery) {
-        return Message.success(procCoreService.getApproveView(approveViewQuery));
+        return Message.success(procViewService.getApproveView(approveViewQuery));
     }
 
     @RequestMapping("getDetailView")
     public Message<ApproveView> getDetailView(String procInstId) {
-        return Message.success(procCoreService.getDetailView(procInstId));
+        return Message.success(procViewService.getDetailView(procInstId));
     }
 
     @PostMapping("approve")
