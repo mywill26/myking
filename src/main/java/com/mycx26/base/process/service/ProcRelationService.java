@@ -16,4 +16,12 @@ import java.util.List;
 public interface ProcRelationService extends IService<ProcRelation> {
 
     List<ProcRelation> getByProcInstId1(String procInstId1);
+
+    /**
+     * Get process relation by child process's flow no.
+     *
+     * @param flowNo2 child flow no
+     * @return  process relation
+     */
+    ProcRelation getByFlowNo2(String flowNo2);
 }
