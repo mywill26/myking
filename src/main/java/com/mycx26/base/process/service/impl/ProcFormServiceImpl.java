@@ -92,36 +92,46 @@ public class ProcFormServiceImpl implements ProcFormService {
             throw new DataException("Form columns config error: "  + subForm);
         }
 
-        StringBuilder error = new StringBuilder();
+        // required validate
         List<Map<String, Object>> subItems = procParamWrapper.getSubItems();
+        requiredValidate(subItems, cols, procParamWrapper.getFlowNo());
+
+        // business validate
+        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (procBaseService instanceof ProcCreateSubValidator) {
+            ((ProcCreateSubValidator)procBaseService).validateSubForm(procParamWrapper);
+        }
+
+        subItems = procParamWrapper.getSubItems();
         List<List<Object>> valueList = new ArrayList<>(subItems.size());
-
         Iterables.foreach(subItems, (i, item) -> {
-            item.put(ProcConstant.FLOW_NO, procParamWrapper.getFlowNo());
-
             List<Object> values = new ArrayList<>(cols.size());
+            cols.forEach(col -> {
+                Object value = item.get(col.getPropName());
+                values.add(value != null ? value.toString() : null);
+            });
+            valueList.add(values);
+        });
+
+        jdbcService.insertBatch(subForm, cols.stream().map(ProcColumn::getColName).collect(Collectors.toList()), valueList);
+    }
+
+    private void requiredValidate(List<Map<String, Object>> subItems, List<ProcColumn> cols, String flowNo) {
+        StringBuilder error = new StringBuilder();
+        Iterables.foreach(subItems, (i, item) -> {
+            item.put(ProcConstant.FLOW_NO, flowNo);
             cols.forEach(col -> {
                 Object value = item.get(col.getPropName());
                 if (col.getRequired() && (null == value
                         || (value instanceof String && StringUtil.isBlank((CharSequence) value)))) {
                     StringUtil.append(error, (i + 1) + " row " + col.getPropName() + " is required");
                 }
-                values.add(value != null ? value.toString() : null);
             });
-            valueList.add(values);
         });
-
         if (error.length() > 0) {
             error.delete(error.length() - 1, error.length());
             throw new ParamException(error.toString());
         }
-
-        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
-        if (procBaseService instanceof ProcCreateSubValidator) {
-            ((ProcCreateSubValidator)procBaseService).validateSubForm(procParamWrapper);
-        }
-
-        jdbcService.insertBatch(subForm, cols.stream().map(ProcColumn::getColName).collect(Collectors.toList()), valueList);
     }
 
     @Override

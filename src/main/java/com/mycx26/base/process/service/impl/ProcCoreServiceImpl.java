@@ -23,6 +23,7 @@ import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.process.service.bo.ProcessAction;
 import com.mycx26.base.process.service.bo.ProcessStart;
+import com.mycx26.base.process.service.handler.ProcCreatePreHandler;
 import com.mycx26.base.service.ExternalUserService;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SpringUtil;
@@ -90,7 +91,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
 
         String flowNo = procParamWrapper.getFlowNo();
-        if (StringUtil.isBlank(flowNo)) {       // consider without flow number condition
+        // consider without flow number condition
+        if (StringUtil.isBlank(flowNo)) {
             flowNo = procFlowNoService.getFlowNo(procDef.getFlowNoPrefix());
             procParamWrapper.setFlowNo(flowNo);
         }
@@ -99,21 +101,28 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             procParamWrapper.setProcInstName(username + "的" + procDef.getProcDefName() + "申请");
         }
 
-        ProcInst procInst = new ProcInst()
+        // create pre-handle
+        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (procBaseService instanceof ProcCreatePreHandler) {
+            ((ProcCreatePreHandler)procBaseService).createPreHandle(procParamWrapper);
+        }
+        // add process instance
+        ProcInst procInst = new ProcInst().setFlowNo(flowNo)
                 .setProcInstName(procParamWrapper.getProcInstName())
                 .setProcDefKey(procDef.getProcDefKey())
-                .setFlowNo(flowNo)
                 .setStatusCode(procParamWrapper.getProcInstStatusCode())
                 .setCreatorId(procParamWrapper.getUserId());
         procInstService.add(procInst);
-
-        procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);       // handle main form
-        if (StringUtil.isNotBlank(procDef.getSubForm())) {      // handle sub form, if sub form configured, suit for simple process
+        // handle main form
+        procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);
+        // handle sub form, if sub form configured, suit for simple process
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
             procFormService.addSubForm(procDef.getSubForm(), procParamWrapper);
             createResourceLock(procParamWrapper, procDef);
         }
 
-        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {    // last, interaction with pe
+        // last, interaction with pe
+        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
             String procInstId = start(procParamWrapper);
             procInst.setProcInstId(procInstId);
             procModifyService.completeProcInstId(procInst);
