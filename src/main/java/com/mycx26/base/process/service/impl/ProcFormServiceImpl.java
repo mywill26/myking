@@ -62,6 +62,9 @@ public class ProcFormServiceImpl implements ProcFormService {
                 StringUtil.append(error, e.getPropName() + " is required");
             }
             colNames.add(e.getColName());
+            if (StringUtil.EMPTY.equals(value)) {
+                value = null;
+            }
             values.add(value);
         });
 
@@ -108,6 +111,9 @@ public class ProcFormServiceImpl implements ProcFormService {
             List<Object> values = new ArrayList<>(cols.size());
             cols.forEach(col -> {
                 Object value = item.get(col.getPropName());
+                if (StringUtil.EMPTY.equals(value)) {
+                    value = null;
+                }
                 values.add(value != null ? value.toString() : null);
             });
             valueList.add(values);
