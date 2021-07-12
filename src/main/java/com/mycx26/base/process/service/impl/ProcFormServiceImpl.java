@@ -53,8 +53,8 @@ public class ProcFormServiceImpl implements ProcFormService {
         List<String> colNames = new ArrayList<>(cols.size());
         List<Object> values = new ArrayList<>(cols.size());
         Map<String, Object> mainFormMap = procParamWrapper.getMainForm();
-
-        mainFormMap.put(ProcConstant.FLOW_NO, procParamWrapper.getFlowNo());     // general put flow number
+        // general put flow number
+        mainFormMap.put(ProcConstant.FLOW_NO, procParamWrapper.getFlowNo());
 
         cols.forEach(e -> {
             Object value = mainFormMap.get(e.getPropName());
@@ -125,6 +125,7 @@ public class ProcFormServiceImpl implements ProcFormService {
     private void requiredValidate(List<Map<String, Object>> subItems, List<ProcColumn> cols, String flowNo) {
         StringBuilder error = new StringBuilder();
         Iterables.foreach(subItems, (i, item) -> {
+            // general put flow number
             item.put(ProcConstant.FLOW_NO, flowNo);
             cols.forEach(col -> {
                 Object value = item.get(col.getPropName());

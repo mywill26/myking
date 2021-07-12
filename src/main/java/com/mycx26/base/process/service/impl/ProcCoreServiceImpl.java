@@ -68,6 +68,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Resource
     private ProcLockService procLockService;
 
+    @Resource(name = "procBaseService")
+    private ProcBaseService procBaseService;
+
     @Resource(name = "defaultNodeHandler")
     private ProcNodeHandler procNodeHandler;
 
@@ -160,6 +163,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         startValidate(procParamWrapper);
 
         ProcBaseService service = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (null == service) {
+            service = procBaseService;
+        }
         Map<String, Object> vars = service.setStartVar(procParamWrapper);
 
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
@@ -170,7 +176,10 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setVars(vars);
 
         String procInstId = procEngineService.startProcess(start);
-        threadPoolTaskExecutor.submit(() -> service.afterCreate(procParamWrapper));
+        if (!(service instanceof ProcBaseServiceImpl)) {
+            ProcBaseService finalService = service;
+            threadPoolTaskExecutor.submit(() -> finalService.afterCreate(procParamWrapper));
+        }
         return procInstId;
     }
 

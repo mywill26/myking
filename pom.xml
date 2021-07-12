@@ -30,7 +30,7 @@
     <name>myking-spring-boot-starter</name>
 
     <properties>
-        <mybatch-spring-boot-starter.version>1.0.8</mybatch-spring-boot-starter.version>
+        <mybatch-spring-boot-starter.version>1.0.9</mybatch-spring-boot-starter.version>
     </properties>
 
     <dependencyManagement>

@@ -128,6 +128,9 @@ public class ProcViewServiceImpl implements ProcViewService {
         if (StringUtil.isAnyBlank(taskQuery.getProcDefKey(), taskQuery.getUserId())) {
             return new ProcToDo();
         }
+        if (null == taskQuery.getParams()) {
+            taskQuery.setParams(Collections.emptyMap());
+        }
 
         ProcDef procDef = procDefService.getByKey(taskQuery.getProcDefKey());
         taskQuery.setProcDefKey(procDef.getEngineKey());
