@@ -11,6 +11,7 @@ import com.mycx26.base.process.service.ProcFormService;
 import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcNodeService;
 import com.mycx26.base.process.service.ProcQueryService;
+import com.mycx26.base.process.service.bo.FullWrapper;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
@@ -38,6 +39,11 @@ public class ProcQueryServiceImpl implements ProcQueryService {
 
     @Resource
     private ProcFormService procFormService;
+
+    @Override
+    public ProcDef getProcDefByDefKey(String procDefKey) {
+        return procDefService.getByKey(procDefKey);
+    }
 
     @Override
     public ProcDef getProcDefByInstId(String procInstId) {
@@ -91,39 +97,64 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     }
 
     @Override
+    public ProcInst getProcInstByFlowNo(String flowNo) {
+        return procInstService.getByFlowNo(flowNo);
+    }
+
+    @Override
     public ProcInst getProcInstByInstId(String procInstId){
         return procInstService.getByProcInstId(procInstId);
     }
 
     @Override
     public Map<String, Object> getMainFormByFlowNo(String flowNo) {
-        String mainForm = getMainFormNameByFlowNo(flowNo);
-        if (StringUtil.isBlank(mainForm)) {
-            return null;
-        }
+        ProcInst procInst = getProcInstByFlowNo(flowNo);
+        return getMainFormByFlowNo(procInst.getProcDefKey(), flowNo);
+    }
 
+    @Override
+    public Map<String, Object> getMainFormByFlowNo(String procDefKey, String flowNo) {
+        ProcDef procDef = getProcDefByDefKey(procDefKey);
         Map<String, Object> clauses = new HashMap<>(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
 
-        return procFormService.getMainForm(mainForm, clauses);
+        return procFormService.getMainForm(procDef.getMainForm(), clauses);
     }
 
     @Override
     public List<Map<String, Object>> getSubItemsByFlowNo(String flowNo) {
-        String subForm = getSubFormNameByFlowNo(flowNo);
-        if (StringUtil.isBlank(subForm)) {
-            return null;
-        }
+        return getSubItemsByFlowNo(flowNo, null);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSubItemsByFlowNo(String flowNo, Map<String, Object> adds) {
+        ProcInst procInst = getProcInstByFlowNo(flowNo);
+        return getSubItemsByFlowNo(procInst.getProcDefKey(), flowNo, adds);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSubItemsByFlowNo(String procDefKey, String flowNo, Map<String, Object> adds) {
+        ProcDef procDef = getProcDefByDefKey(procDefKey);
 
         Map<String, Object> clauses = new HashMap<>(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
 
-        return procFormService.getSubForm(subForm, clauses);
+        if (!CollectionUtil.isEmpty(adds)) {
+            clauses.putAll(adds);
+        }
+
+        return procFormService.getSubForm(procDef.getSubForm(), clauses);
     }
 
     @Override
     public Map<String, Object> getMainFormByProcInstId(String procInstId) {
-        ProcDef procDef = getProcDefByInstId(procInstId);
+        ProcInst procInst = getProcInstByInstId(procInstId);
+        return getMainFormByProcInstId(procInst.getProcDefKey(), procInstId);
+    }
+
+    @Override
+    public Map<String, Object> getMainFormByProcInstId(String procDefKey, String procInstId) {
+        ProcDef procDef = getProcDefByDefKey(procDefKey);
         Map<String, Object> clauses = new HashMap<>(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId);
 
@@ -131,8 +162,19 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     }
 
     @Override
+    public List<Map<String, Object>> getSubItemsByProcInstId(String procInstId) {
+        return getSubItemsByProcInstId(procInstId, null);
+    }
+
+    @Override
     public List<Map<String, Object>> getSubItemsByProcInstId(String procInstId, Map<String, Object> adds) {
-        ProcDef procDef = getProcDefByInstId(procInstId);
+        ProcInst procInst = getProcInstByInstId(procInstId);
+        return getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, adds);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSubItemsByProcInstId(String procDefKey, String procInstId, Map<String, Object> adds) {
+        ProcDef procDef = getProcDefByDefKey(procDefKey);
 
         Map<String, Object> clauses = new HashMap<>(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId);
@@ -163,6 +205,11 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     }
 
     @Override
+    public ProcNode getProcNodeByDefKeyAndNodeKey(String procDefKey, String nodeKey) {
+        return procNodeService.getByProcDefKeyAndNodeKey(procDefKey, nodeKey);
+    }
+
+    @Override
     public ProcNode getProcNodeByFlowNoAndNodeKey(String flowNo, String nodeKey) {
         if (StringUtil.isAnyBlank(flowNo, nodeKey)) {
             return null;
@@ -190,5 +237,31 @@ public class ProcQueryServiceImpl implements ProcQueryService {
         }
 
         return procNode;
+    }
+
+    @Override
+    public FullWrapper buildFullByInstId(String procInstId) {
+        FullWrapper fullWrapper = new FullWrapper();
+
+        ProcInst procInst = getProcInstByInstId(procInstId);
+        fullWrapper.setProcInst(procInst);
+
+        fullWrapper.setMainForm(getMainFormByProcInstId(procInst.getProcDefKey(), procInstId));
+        fullWrapper.setSubItems(getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, null));
+
+        return fullWrapper;
+    }
+
+    @Override
+    public FullWrapper buildFullFlowNo(String flowNo) {
+        FullWrapper fullWrapper = new FullWrapper();
+
+        ProcInst procInst = getProcInstByFlowNo(flowNo);
+        fullWrapper.setProcInst(procInst);
+
+        fullWrapper.setMainForm(getMainFormByFlowNo(procInst.getProcDefKey(), flowNo));
+        fullWrapper.setSubItems(getSubItemsByFlowNo(procInst.getProcDefKey(), flowNo, null));
+
+        return fullWrapper;
     }
 }

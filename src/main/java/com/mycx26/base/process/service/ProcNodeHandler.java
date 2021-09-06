@@ -64,9 +64,35 @@ public abstract class ProcNodeHandler {
         return procFormService.getMainForm(approveWrapper.getProcDef().getMainForm(), clauses);
     }
 
+    protected List<Map<String, Object>> getSubItemsByFlowNo(ApproveWrapper approveWrapper) {
+        return getSubItemsByFlowNo(approveWrapper, null);
+    }
+
     protected List<Map<String, Object>> getSubItemsByFlowNo(ApproveWrapper approveWrapper, Map<String, Object> adds) {
         Map<String, Object> clauses = new HashMap<>(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), approveWrapper.getFlowNo());
+
+        if (!CollectionUtil.isEmpty(adds)) {
+            clauses.putAll(adds);
+        }
+
+        return procFormService.getSubForm(approveWrapper.getProcDef().getSubForm(), clauses);
+    }
+
+    protected Map<String, Object> getMainFormByProcInstId(ApproveWrapper approveWrapper) {
+        Map<String, Object> clauses = new HashMap<>(1);
+        clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), approveWrapper.getProcInstId());
+
+        return procFormService.getMainForm(approveWrapper.getProcDef().getMainForm(), clauses);
+    }
+
+    protected List<Map<String, Object>> getSubItemsByProcInstId(ApproveWrapper approveWrapper) {
+        return getSubItemsByProcInstId(approveWrapper, null);
+    }
+
+    protected List<Map<String, Object>> getSubItemsByProcInstId(ApproveWrapper approveWrapper, Map<String, Object> adds) {
+        Map<String, Object> clauses = new HashMap<>(1);
+        clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), approveWrapper.getProcInstId());
 
         if (!CollectionUtil.isEmpty(adds)) {
             clauses.putAll(adds);
@@ -106,12 +132,5 @@ public abstract class ProcNodeHandler {
                 procLockService.unlock(resourceIds);
             }
         }
-    }
-
-    protected Map<String, Object> getMainFormByProcInstId(ApproveWrapper approveWrapper) {
-        Map<String, Object> clauses = new HashMap<>(1);
-        clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), approveWrapper.getProcInstId());
-
-        return procFormService.getMainForm(approveWrapper.getProcDef().getMainForm(), clauses);
     }
 }

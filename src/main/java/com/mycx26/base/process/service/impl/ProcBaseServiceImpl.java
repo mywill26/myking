@@ -3,7 +3,11 @@ package com.mycx26.base.process.service.impl;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.service.ProcBaseService;
+import com.mycx26.base.process.service.ProcDefService;
+import com.mycx26.base.process.service.ProcFormService;
+import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcLockService;
+import com.mycx26.base.process.service.ProcQueryService;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +29,18 @@ import java.util.stream.Collectors;
 public class ProcBaseServiceImpl extends ProcBaseService {
 
     @Resource
+    protected ProcInstService procInstService;
+
+    @Resource
+    protected ProcDefService procDefService;
+
+    @Resource
+    protected ProcFormService procFormService;
+
+    @Resource
+    protected ProcQueryService procQueryService;
+
+    @Resource
     protected ProcLockService procLockService;
 
     @Override
@@ -42,7 +58,7 @@ public class ProcBaseServiceImpl extends ProcBaseService {
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
 
         if (procDef.getLockResource()) {
-            List<Map<String, Object>> subItems = getSubItemsByProcInstId(procInstId, null);
+            List<Map<String, Object>> subItems = procQueryService.getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, null);
             if (subItems.isEmpty()) {
                 return;
             }
