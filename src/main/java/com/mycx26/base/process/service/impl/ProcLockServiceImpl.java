@@ -94,6 +94,15 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
     }
 
     @Override
+    public void unlockByFlowNo(String flowNo) {
+        if (StringUtil.isBlank(flowNo)) {
+            return;
+        }
+
+        remove(Wrappers.<ProcLock>lambdaUpdate().eq(ProcLock::getFlowNo, flowNo));
+    }
+
+    @Override
     public List<ProcLock> getByResourceIds(List<String> resourceIds) {
         if (CollectionUtil.isEmpty(resourceIds)) {
             return Collections.emptyList();

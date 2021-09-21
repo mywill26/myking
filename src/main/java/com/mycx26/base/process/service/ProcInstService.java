@@ -29,7 +29,13 @@ public interface ProcInstService extends IService<ProcInst> {
 
     List<ProcInst> getByFlowNos(List<String> flowNos);
 
-    void modifyInstByFlowNo(String procInstId, String flowNo);
-
     ProcInst end(String procInstId);
+
+    /**
+     * propel process instance to REJECT_FIRST status
+     *
+     * @param procInstId process instance id
+     * @return process instance
+     */
+    ProcInst rejectFirst(String procInstId);
 }

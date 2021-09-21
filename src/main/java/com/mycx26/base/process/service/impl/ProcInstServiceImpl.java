@@ -150,23 +150,10 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
     }
 
     @Override
-    public void modifyInstByFlowNo(String procInstId, String flowNo) {
-        update(new UpdateWrapper<ProcInst>()
-                .set(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId)
-                .set("status_code", InstanceStatus.RUN.getCode())
-                .eq(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo));
-    }
-
-    @Override
     public ProcInst end(String procInstId) {
-        ProcInst procInst;
-        if (StringUtil.isBlank(procInstId)) {
-            throw new ParamException("Process instance id is required");
-        } else {
-            procInst = getByProcInstId(procInstId);
-            if (null == procInst) {
-                throw new ParamException("Process instance not exist");
-            }
+        ProcInst procInst = getByProcInstId(procInstId);
+        if (null == procInst) {
+            throw new ParamException("Process instance not exist");
         }
 
         String col = SqlUtil.camelToUnderline(ProcConstant.PROC_INST_STATUS_CODE);
@@ -179,6 +166,26 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
 
         if (!flag) {
             throw new DataException("Process has end");
+        }
+
+        return procInst;
+    }
+
+    @Override
+    public ProcInst rejectFirst(String procInstId) {
+        ProcInst procInst = getByProcInstId(procInstId);
+        if (null == procInst) {
+            throw new ParamException("Process instance not exist");
+        }
+
+        boolean flag = update(Wrappers.<ProcInst>lambdaUpdate()
+                .set(ProcInst::getStatusCode, InstanceStatus.REJECT_FIRST.getCode())
+                .eq(ProcInst::getProcInstId, procInstId)
+                .eq(ProcInst::getStatusCode, InstanceStatus.RUN.getCode())
+        );
+
+        if (!flag) {
+            throw new DataException("Process has reject first");
         }
 
         return procInst;

@@ -1,11 +1,13 @@
 package com.mycx26.base.process.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mycx26.base.process.constant.ProcConstant;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
+import com.mycx26.base.process.enump.InstanceStatus;
 import com.mycx26.base.process.service.ProcDefService;
+import com.mycx26.base.process.service.ProcExtendedService;
 import com.mycx26.base.process.service.ProcInstService;
-import com.mycx26.base.process.service.ProcModifyService;
 import com.mycx26.base.service.JdbcService;
 import com.mycx26.base.util.SqlUtil;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by mycx26 on 2020/9/28.
+ * @author mycx26
+ * @date 2021/9/16
  */
 @Service
-public class ProcModifyServiceImpl implements ProcModifyService {
+public class ProcExtendedServiceImpl implements ProcExtendedService {
 
     @Resource
     private ProcInstService procInstService;
@@ -31,7 +34,11 @@ public class ProcModifyServiceImpl implements ProcModifyService {
 
     @Override
     public void completeProcInstId(ProcInst procInst) {
-        procInstService.modifyInstByFlowNo(procInst.getProcInstId(), procInst.getFlowNo());   // complete process instance id
+        // complete process instance id
+        procInstService.update(Wrappers.<ProcInst>lambdaUpdate()
+                .set(ProcInst::getProcInstId, procInst.getProcInstId())
+                .set(ProcInst::getStatusCode, InstanceStatus.RUN.getCode())
+                .eq(ProcInst::getFlowNo, procInst.getFlowNo()));
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         Map<String, Object> updates = new HashMap<>(1);

@@ -3,9 +3,10 @@ package com.mycx26.base.process.service;
 import com.mycx26.base.process.entity.ProcInst;
 
 /**
- * Created by mycx26 on 2020/9/28.
+ * @author mycx26
+ * @date 2021/9/16
  */
-public interface ProcModifyService {
+public interface ProcExtendedService {
 
     void completeProcInstId(ProcInst procInst);
 }

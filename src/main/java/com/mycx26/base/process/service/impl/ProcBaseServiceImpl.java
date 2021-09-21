@@ -9,15 +9,12 @@ import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcLockService;
 import com.mycx26.base.process.service.ProcQueryService;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
-import com.mycx26.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Default implementation of process base service.
@@ -55,23 +52,20 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     @Override
     public void endPostHandle(String procInstId) {
         ProcInst procInst = procInstService.end(procInstId);
-        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
 
         if (procDef.getLockResource()) {
-            List<Map<String, Object>> subItems = procQueryService.getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, null);
-            if (subItems.isEmpty()) {
-                return;
-            }
-
-            String resourceKey = procDef.getResourceKey();
-            if (StringUtil.isNotBlank(resourceKey)) {
-                List<String> resourceIds = subItems.stream().map(e -> (String) e.get(resourceKey)).collect(Collectors.toList());
-                procLockService.unlock(resourceIds);
-            }
+            procLockService.unlockByFlowNo(procInst.getFlowNo());
         }
     }
 
     @Override
     public void rejectFirstHandle(String procInstId) {
+        ProcInst procInst = procInstService.rejectFirst(procInstId);
+        ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
+
+        if (procDef.getLockResource()) {
+            procLockService.unlockByFlowNo(procInst.getFlowNo());
+        }
     }
 }

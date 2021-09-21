@@ -19,6 +19,13 @@ public interface ProcLockService extends BaseService<ProcLock> {
 
     void unlock(List<String> resourceIds);
 
+    /**
+     * unlock resource by flow no
+     *
+     * @param flowNo flow no
+     */
+    void unlockByFlowNo(String flowNo);
+
     // get resource lock state related process
     List<ProcLock> getByResourceIds(List<String> resourceIds);
 

@@ -1,6 +1,5 @@
 package com.mycx26.base.process.service.impl;
 
-import com.google.common.collect.Maps;
 import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.ParamException;
 import com.mycx26.base.process.entity.ProcDef;
@@ -12,11 +11,11 @@ import com.mycx26.base.process.service.ProcBaseService;
 import com.mycx26.base.process.service.ProcCoreService;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcEngineService;
+import com.mycx26.base.process.service.ProcExtendedService;
 import com.mycx26.base.process.service.ProcFlowNoService;
 import com.mycx26.base.process.service.ProcFormService;
 import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcLockService;
-import com.mycx26.base.process.service.ProcModifyService;
 import com.mycx26.base.process.service.ProcNodeHandler;
 import com.mycx26.base.process.service.ProcNodeService;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
@@ -71,11 +70,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Resource(name = "procBaseService")
     private ProcBaseService procBaseService;
 
-    @Resource(name = "defaultNodeHandler")
-    private ProcNodeHandler procNodeHandler;
-
     @Resource
-    private ProcModifyService procModifyService;
+    private ProcExtendedService procExtendedService;
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -128,7 +124,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
             String procInstId = start(procParamWrapper);
             procInst.setProcInstId(procInstId);
-            procModifyService.completeProcInstId(procInst);
+            procExtendedService.completeProcInstId(procInst);
         }
 
         return flowNo;
@@ -250,7 +246,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
         approveWrapper.setFlowNo(procInst.getFlowNo());     // set flow no
         approveWrapper.setProcDef(procDefService.getByKey(procInst.getProcDefKey()));   // set process definition
-        approveWrapper.setMainForm(null == approveWrapper.getMainForm() ? Maps.newHashMap() : approveWrapper.getMainForm());
+        if (null == approveWrapper.getMainForm()) {
+            approveWrapper.setMainForm(Collections.emptyMap());
+        }
 
         ProcNode procNode = validateNode(approveWrapper);
 
@@ -289,10 +287,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         rejectValidate(approveWrapper);
         ProcNodeHandler handler = preHandle(approveWrapper);
 
-        if (null == handler) {
-            handler = procNodeHandler;
+        if (handler != null) {
+            handler.rejectFirstHandle(approveWrapper);
         }
-        handler.rejectFirstHandle(approveWrapper);
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -306,15 +303,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     private ProcInst approveValidate(ApproveWrapper approveWrapper) {
         StringBuilder sb = new StringBuilder();
-        ProcInst procInst = null;
-
-        if (StringUtil.isBlank(approveWrapper.getProcInstId())) {   // which form
-            StringUtil.append(sb, "Process instance id is required");
-        } else {
-            procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
-            if (null == procInst) {
-                throw new DataException("Process instance not exist");
-            }
+        ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());     // which form
+        if (null == procInst) {
+            throw new DataException("Process instance not exist");
         }
         if (StringUtil.isBlank(approveWrapper.getTaskId())) {   // which task
             StringUtil.append(sb, "Task id is required");
