@@ -47,6 +47,11 @@ public class ProcRelation implements Serializable {
     private String procDefKey1;
 
     /**
+     * 流程实例id2
+     */
+    private String procInstId2;
+
+    /**
      * 流水号2
      */
     private String flowNo2;

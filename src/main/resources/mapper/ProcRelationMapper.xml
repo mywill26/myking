@@ -5,14 +5,16 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.mycx26.base.process.entity.ProcRelation">
         <id column="id" property="id" />
+        <result column="proc_inst_id1" property="procInstId1" />
         <result column="flow_no1" property="flowNo1" />
         <result column="proc_def_key1" property="procDefKey1" />
+        <result column="proc_inst_id2" property="procInstId2" />
         <result column="flow_no2" property="flowNo2" />
         <result column="proc_def_key2" property="procDefKey2" />
     </resultMap>
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, flow_no1, proc_def_key1, flow_no2, proc_def_key2
+        id, proc_inst_id1, flow_no1, proc_def_key1, proc_inst_id2, flow_no2, proc_def_key2
     </sql>
 
 </mapper>

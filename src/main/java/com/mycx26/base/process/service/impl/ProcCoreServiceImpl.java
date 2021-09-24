@@ -87,13 +87,11 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Override
     public String create(ProcParamWrapper procParamWrapper) {
         createBaseValidate(procParamWrapper);
-        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
 
-        String flowNo = procParamWrapper.getFlowNo();
+        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
         // consider without flow number condition
-        if (StringUtil.isBlank(flowNo)) {
-            flowNo = procFlowNoService.getFlowNo(procDef.getFlowNoPrefix());
-            procParamWrapper.setFlowNo(flowNo);
+        if (StringUtil.isBlank(procParamWrapper.getFlowNo())) {
+            procParamWrapper.setFlowNo(procFlowNoService.getFlowNo(procDef.getFlowNoPrefix()));
         }
         if (StringUtil.isBlank(procParamWrapper.getProcInstName())) {
             String username = externalUserService.getNameByUserId(procParamWrapper.getUserId());
@@ -106,7 +104,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             ((ProcCreatePreHandler)procBaseService).createPreHandle(procParamWrapper);
         }
         // add process instance
-        ProcInst procInst = new ProcInst().setFlowNo(flowNo)
+        ProcInst procInst = new ProcInst().setFlowNo(procParamWrapper.getFlowNo())
                 .setProcInstName(procParamWrapper.getProcInstName())
                 .setProcDefKey(procDef.getProcDefKey())
                 .setStatusCode(procParamWrapper.getProcInstStatusCode())
@@ -120,14 +118,15 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             createResourceLock(procParamWrapper, procDef);
         }
 
+        String procInstId = null;
         // last, interaction with pe
         if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
-            String procInstId = start(procParamWrapper);
+            procInstId = start(procParamWrapper);
             procInst.setProcInstId(procInstId);
             procExtendedService.completeProcInstId(procInst);
         }
 
-        return flowNo;
+        return procInstId;
     }
 
     private void createBaseValidate(ProcParamWrapper procParamWrapper) {
