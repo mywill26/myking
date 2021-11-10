@@ -54,7 +54,7 @@ public class ProcNode implements Serializable {
     private String categoryCode;
 
     /**
-     * 子表
+     * 节点处理器
      */
     private String nodeHandler;
 

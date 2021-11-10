@@ -60,6 +60,10 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     }
 
     @Override
+    public void afterEnd(String procInstId) {
+    }
+
+    @Override
     public void rejectFirstHandle(String procInstId) {
         ProcInst procInst = procInstService.rejectFirst(procInstId);
         ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());

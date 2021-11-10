@@ -11,22 +11,39 @@ public abstract class ProcBaseService {
 
     public static final String SUFFIX = "Service";
 
-    // set process start variables and return
+    /**
+     * set process start variables
+     *
+     * @param procParamWrapper create parameter wrapper
+     * @return variables
+     */
     public abstract Map<String, Object> setStartVar(ProcParamWrapper procParamWrapper);
 
     /**
      * Callback after completion of create process.
-     * The execution failure does not affect the main process.
+     * The execution failure should not affect the main process.
      *
-     * @param procParamWrapper create param
+     * @param procParamWrapper create parameter wrapper
      */
     public abstract void afterCreate(ProcParamWrapper procParamWrapper);
 
-    // process end postHandle
+    /**
+     * handle when process end
+     *
+     * @param procInstId process instance id
+     */
     public abstract void endPostHandle(String procInstId);
 
     /**
-     * Called after the process is rejected to first node.
+     * Callback after end of process.
+     * The execution failure should not affect the main process.
+     *
+     * @param procInstId process instance id
+     */
+    public abstract void afterEnd(String procInstId);
+
+    /**
+     * handle when process is rejected to first node
      *
      * @param procInstId process instance id
      */

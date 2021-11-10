@@ -220,6 +220,15 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setVars(vars);
 
         procEngineService.approve(processAction);
+
+        threadPoolTaskExecutor.submit(() -> {
+            ProcNode procNode = procNodeService.getByProcDefKeyAndNodeKey(
+                    approveWrapper.getProcDef().getProcDefKey(), approveWrapper.getNodeKey());
+            ProcNodeHandler handler = SpringUtil.getBean2(procNode.getNodeHandler());
+            if (handler != null) {
+                handler.afterApprove(approveWrapper);
+            }
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -322,8 +331,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     }
 
     private ProcNode validateNode(ApproveWrapper approveWrapper) {
-        ProcNode procNode = procNodeService
-                .getByProcDefKeyAndNodeKey(approveWrapper.getProcDef().getProcDefKey(), approveWrapper.getNodeKey());
+        ProcNode procNode = procNodeService.getByProcDefKeyAndNodeKey(
+                approveWrapper.getProcDef().getProcDefKey(), approveWrapper.getNodeKey());
         if (null == procNode) {
             throw new DataException("Process node not exist");
         }

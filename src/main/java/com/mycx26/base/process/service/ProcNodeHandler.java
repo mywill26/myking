@@ -34,25 +34,65 @@ public abstract class ProcNodeHandler {
     @Resource
     protected ProcInstService procInstService;
 
-    // approve validate
+    @Resource
+    protected ProcUpdateService procUpdateService;
+
+    /**
+     * approve validate
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void approveValidate(ApproveWrapper approveWrapper);
 
-    // approve handle process main form data
+    /**
+     * approve handle process main form data
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void handleMainForm(ApproveWrapper approveWrapper);
 
-    // approve handle process sub form data
+    /**
+     * approve handle process sub form data
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void handleSubForm(ApproveWrapper approveWrapper);
 
-    // approve handle business form data
+    /**
+     * approve handle business form data
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void handleBizForm(ApproveWrapper approveWrapper);
 
-    // approve handle process node variables and return
+    /**
+     * approve handle process node variables and return
+     *
+     * @param approveWrapper approve wrapper
+     * @return variables
+     */
     public abstract Map<String, Object> handleVars(ApproveWrapper approveWrapper);
 
-    // reject previous data handle
+    /**
+     * Callback after process approve.
+     * The execution failure should not affect the main process.
+     *
+     * @param approveWrapper approve wrapper
+     */
+    public abstract void afterApprove(ApproveWrapper approveWrapper);
+
+    /**
+     * reject previous data handle
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void rejectPreviousHandle(ApproveWrapper approveWrapper);
 
-    // reject first data handle
+    /**
+     * reject first data handle
+     *
+     * @param approveWrapper approve wrapper
+     */
     public abstract void rejectFirstHandle(ApproveWrapper approveWrapper);
 
     // ==============================================================>
@@ -102,17 +142,11 @@ public abstract class ProcNodeHandler {
     }
 
     protected void updateByFlowNo(ApproveWrapper approveWrapper, String tblName, Map<String, Object> updates) {
-        Map<String, Object> clauses = new HashMap<>(1);
-        clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), approveWrapper.getFlowNo());
-
-        jdbcService.update(tblName, updates, clauses);
+        procUpdateService.updateByFlowNo(approveWrapper.getFlowNo(), tblName, updates);
     }
 
     protected void updateById(Long id, String tblName, Map<String, Object> updates) {
-        Map<String, Object> clauses = new HashMap<>(1);
-        clauses.put(SqlUtil.camelToUnderline(ProcConstant.ID), id);
-
-        jdbcService.update(tblName, updates, clauses);
+        procUpdateService.updateById(id, tblName, updates);
     }
 
     protected void doUnlock(ApproveWrapper approveWrapper) {

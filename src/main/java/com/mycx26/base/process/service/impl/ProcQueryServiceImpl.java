@@ -187,24 +187,6 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     }
 
     @Override
-    public String getMainFormNameByFlowNo(String flowNo) {
-        if (StringUtil.isBlank(flowNo)) {
-            return null;
-        }
-
-        return getProcDefByFlowNo(flowNo).getMainForm();
-    }
-
-    @Override
-    public String getSubFormNameByFlowNo(String flowNo) {
-        if (StringUtil.isBlank(flowNo)) {
-            return null;
-        }
-
-        return getProcDefByFlowNo(flowNo).getSubForm();
-    }
-
-    @Override
     public ProcNode getProcNodeByDefKeyAndNodeKey(String procDefKey, String nodeKey) {
         return procNodeService.getByProcDefKeyAndNodeKey(procDefKey, nodeKey);
     }

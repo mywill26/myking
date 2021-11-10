@@ -326,6 +326,10 @@ public class ProcViewServiceImpl implements ProcViewService {
         if (null == procInst) {
             procInst = procInstService.getByFlowNo(procInstId);
         }
+        if (null == procInst) {
+            throw new DataException("Process instance not exist");
+        }
+
         approveView.setProcInstStatusCode(procInst.getStatusCode());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
