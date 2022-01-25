@@ -15,8 +15,18 @@ import java.util.List;
  */
 public interface ProcLockService extends BaseService<ProcLock> {
 
+    /**
+     * lock process resources
+     *
+     * @param procLocks process locks
+     */
     void lock(List<ProcLock> procLocks);
 
+    /**
+     * unlock process resources
+     *
+     * @param resourceIds resource ids
+     */
     void unlock(List<String> resourceIds);
 
     /**
@@ -26,9 +36,18 @@ public interface ProcLockService extends BaseService<ProcLock> {
      */
     void unlockByFlowNo(String flowNo);
 
-    // get resource lock state related process
+    /**
+     * get resource lock state related process
+     *
+     * @param resourceIds resource ids
+     * @return process locks
+     */
     List<ProcLock> getByResourceIds(List<String> resourceIds);
 
-    // try lock when problem exist
+    /**
+     * try lock when problem exist
+     *
+     * @param flowNos flow nos
+     */
     void lockByFlowNos(List<String> flowNos);
 }

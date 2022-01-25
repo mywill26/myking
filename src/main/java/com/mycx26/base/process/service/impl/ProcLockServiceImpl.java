@@ -1,6 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.base.AppException;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
@@ -16,7 +17,7 @@ import com.mycx26.base.service.base.impl.BaseServiceImpl;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.exceptions.PersistenceException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,8 +72,8 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
 
         try {
             procLockMapper.insertBatchSomeColumn(procLocks);
-        } catch (PersistenceException e) {
-            throw new AppException("Resource lock fail, please try again later");
+        } catch (DuplicateKeyException e) {
+            throw new DataException("Resource has bean locked");
         }
     }
 
@@ -89,7 +90,7 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
 
         int count = procLockMapper.delete(Wrappers.<ProcLock>lambdaUpdate().in(ProcLock::getResourceId, resourceIds));
         if (count != collect.size()) {
-            throw new AppException("Resource unlock fail, please try again later");
+            throw new AppException("Resource unlock fail");
         }
     }
 
