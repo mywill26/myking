@@ -13,6 +13,8 @@ import lombok.experimental.Accessors;
 @Data
 public class ProcessLog {
 
+    private String nodeKey;
+
     private String nodeName;
 
     private String userId;
