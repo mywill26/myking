@@ -37,4 +37,7 @@ public class ProcessLog {
     private String endTime;
 
     private String categoryCode = ProcLogCategory.PAST.getCode();
+
+    @Deprecated
+    private String taskId;
 }
