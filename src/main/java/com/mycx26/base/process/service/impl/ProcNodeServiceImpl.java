@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mycx26.base.constant.CacheConstant;
 import com.mycx26.base.context.UserContext;
 import com.mycx26.base.enump.Yn;
 import com.mycx26.base.exception.DataException;
@@ -18,6 +19,8 @@ import com.mycx26.base.service.dto.PageData;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.StringUtil;
+import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -115,8 +118,9 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
             throw new ParamException("Process definition key, node key are required");
         }
 
-        String procDefKey = procNode.getProcDefKey();
-        String nodeKey = procNode.getNodeKey();
+        if (StringUtil.isNotBlank(procNode.getTips())) {
+            procNode.setTips(StringEscapeUtils.unescapeHtml4(procNode.getTips()));
+        }
         update(Wrappers.<ProcNode>lambdaUpdate()
                 .set(StringUtil.isNotBlank(procNode.getNodeName()), ProcNode::getNodeName, procNode.getNodeName())
 //                .set(ProcNode::getNodeHandler, procNode.getNodeHandler())
@@ -127,11 +131,15 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
                 .set(ProcNode::getTips, procNode.getTips())
                 .set(ProcNode::getYn, procNode.getYn())
                 .set(ProcNode::getModifierId, UserContext.getUserId())
-                .eq(ProcNode::getProcDefKey, procDefKey).eq(ProcNode::getNodeKey, nodeKey)
+                .eq(ProcNode::getProcDefKey, procNode.getProcDefKey()).eq(ProcNode::getNodeKey, procNode.getNodeKey())
         );
+
+        procNodeService.deleteCacheByProcDefKeyAndNodeKey(procNode.getProcDefKey(), procNode.getNodeKey());
+        procNodeService.deleteFirstCacheByProcDefKey(procNode.getProcDefKey());
     }
 
-    @Cacheable(value = ProcCacheConstant.NODE_FIRST, key="#procDefKey", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.NODE_FIRST, cacheManager = CacheConstant.CENTER_MANAGER,
+            key="#procDefKey", unless = "null == #result")
     @Override
     public ProcNode getFirst(String procDefKey) {
         if (StringUtil.isBlank(procDefKey)) {
@@ -151,6 +159,12 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
         return nodes.get(0);
     }
 
+    @CacheEvict(value = ProcCacheConstant.NODE_FIRST, cacheManager = CacheConstant.CENTER_MANAGER, key="#procDefKey")
+    @Override
+    public void deleteFirstCacheByProcDefKey(String procDefKey) {
+        assert StringUtil.isNotBlank(procDefKey);
+    }
+
     @Override
     public List<ProcNode> getByProcDefKeyAndNodeKeys(String procDefKey, List<String> nodeKeys) {
         if (StringUtil.isBlank(procDefKey) || CollectionUtil.isEmpty(nodeKeys)) {
@@ -160,7 +174,8 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
         return list(new QueryWrapper<ProcNode>().eq("proc_def_key", procDefKey).in("node_key", nodeKeys).eq("yn", Yn.YES.getCode()));
     }
 
-    @Cacheable(value = ProcCacheConstant.PROC_NODE, key="#procDefKey + '&' + #nodeKey", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_NODE, cacheManager = CacheConstant.CENTER_MANAGER,
+            key="#procDefKey + '&' + #nodeKey", unless = "null == #result")
     @Override
     public ProcNode getByProcDefKeyAndNodeKey(String procDefKey, String nodeKey) {
         if (StringUtil.isAnyBlank(procDefKey, nodeKey)) {
@@ -168,6 +183,13 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
         }
 
         return getOne(new QueryWrapper<ProcNode>().eq("proc_def_key", procDefKey).eq("node_key", nodeKey).eq("yn", Yn.YES.getCode()));
+    }
+
+    @CacheEvict(value = ProcCacheConstant.PROC_NODE, cacheManager = CacheConstant.CENTER_MANAGER,
+            key="#procDefKey + '&' + #nodeKey")
+    @Override
+    public void deleteCacheByProcDefKeyAndNodeKey(String procDefKey, String nodeKey) {
+        assert StringUtil.isAnyNotBlank(procDefKey, nodeKey);
     }
 
     @Override

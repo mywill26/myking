@@ -35,19 +35,19 @@ public class ProcNodeController {
     }
 
     @PostMapping("init")
-    public Message init(String procDefKey) {
+    public Message<?> init(String procDefKey) {
         procNodeService.init(procDefKey);
         return Message.success();
     }
 
     @PostMapping("add")
-    public Message add(ProcNode procNode) {
+    public Message<?> add(ProcNode procNode) {
         procNodeService.add(procNode);
         return Message.success();
     }
 
     @PostMapping("modify")
-    public Message modify(ProcNode procNode) {
+    public Message<?> modify(ProcNode procNode) {
         procNodeService.modify(procNode);
         return Message.success();
     }

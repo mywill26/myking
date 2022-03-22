@@ -27,9 +27,13 @@ public interface ProcNodeService extends IService<ProcNode> {
 
     ProcNode getFirst(String procDefKey);
 
+    void deleteFirstCacheByProcDefKey(String procDefKey);
+
     List<ProcNode> getByProcDefKeyAndNodeKeys(String procDefKey, List<String> nodeKeys);
 
     ProcNode getByProcDefKeyAndNodeKey(String procDefKey, String nodeKey);
+
+    void deleteCacheByProcDefKeyAndNodeKey(String procDefKey, String nodeKey);
 
     String getViewKeyByProcDefKeyAndNodeKey(String procDefKey, String nodeKey);
 
