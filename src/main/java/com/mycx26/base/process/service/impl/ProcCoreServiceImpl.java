@@ -89,14 +89,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         createBaseValidate(procParamWrapper);
 
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
-        // consider without flow number condition
-        if (StringUtil.isBlank(procParamWrapper.getFlowNo())) {
-            procParamWrapper.setFlowNo(procFlowNoService.getFlowNo(procDef.getFlowNoPrefix()));
-        }
-        if (StringUtil.isBlank(procParamWrapper.getProcInstName())) {
-            String username = externalUserService.getNameByUserId(procParamWrapper.getUserId());
-            procParamWrapper.setProcInstName(username + "的" + procDef.getProcDefName() + "申请");
-        }
+        handleFlowNo(procParamWrapper, procDef);
+        handleSubject(procParamWrapper, procDef);
 
         // create pre-handle
         ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
@@ -127,6 +121,20 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
 
         return procInstId;
+    }
+
+    private void handleFlowNo(ProcParamWrapper procParamWrapper, ProcDef procDef) {
+        // consider without flow number condition
+        if (StringUtil.isBlank(procParamWrapper.getFlowNo())) {
+            procParamWrapper.setFlowNo(procFlowNoService.getFlowNo(procDef.getFlowNoPrefix()));
+        }
+    }
+
+    private void handleSubject(ProcParamWrapper procParamWrapper, ProcDef procDef) {
+        if (StringUtil.isBlank(procParamWrapper.getProcInstName())) {
+            String username = externalUserService.getNameByUserId(procParamWrapper.getUserId());
+            procParamWrapper.setProcInstName(username + "的" + procDef.getProcDefName() + "申请");
+        }
     }
 
     private void createBaseValidate(ProcParamWrapper procParamWrapper) {
@@ -168,6 +176,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setProcDefKey(procDef.getEngineKey())
                 .setName(procParamWrapper.getProcInstName())
                 .setCreatorId(procParamWrapper.getUserId())
+                .setBusinessKey(procParamWrapper.getFlowNo())
                 .setVars(vars);
 
         String procInstId = procEngineService.startProcess(start);
