@@ -38,4 +38,6 @@ public class ApproveView {
     private long subTotal;
 
     private Boolean mobile;
+
+    private String procDefKey;
 }

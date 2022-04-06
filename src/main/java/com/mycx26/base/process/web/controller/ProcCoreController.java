@@ -60,7 +60,7 @@ public class ProcCoreController {
     }
 
     @PostMapping("approve")
-    public Message approve(ApproveWrapper approveWrapper) {
+    public Message<?> approve(ApproveWrapper approveWrapper) {
         approveWrapper.setUserId(UserContext.getUserId());
         procCoreService.approve(approveWrapper);
 
@@ -68,7 +68,7 @@ public class ProcCoreController {
     }
 
     @PostMapping("rejectPrevious")
-    public Message rejectPrevious(ApproveWrapper approveWrapper) {
+    public Message<?> rejectPrevious(ApproveWrapper approveWrapper) {
         approveWrapper.setUserId(UserContext.getUserId());
         procCoreService.rejectPrevious(approveWrapper);
 
@@ -76,7 +76,7 @@ public class ProcCoreController {
     }
 
     @PostMapping("rejectFirst")
-    public Message rejectFirst(ApproveWrapper approveWrapper) {
+    public Message<?> rejectFirst(ApproveWrapper approveWrapper) {
         approveWrapper.setUserId(UserContext.getUserId());
         procCoreService.rejectFirst(approveWrapper);
 
@@ -84,7 +84,7 @@ public class ProcCoreController {
     }
 
     @PostMapping("create")
-    public Message create(ProcParamWrapper procParamWrapper) {
+    public Message<?> create(ProcParamWrapper procParamWrapper) {
         procParamWrapper.setUserId(UserContext.getUserId());
         procCoreService.create(procParamWrapper);
 

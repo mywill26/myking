@@ -35,7 +35,10 @@ public class ProcViewCol implements Serializable {
 
     /**
      * 流程定义key
+     *
+     * @deprecated 一个视图可被多个流程节点复用
      */
+    @Deprecated
     private String procDefKey;
 
     /**

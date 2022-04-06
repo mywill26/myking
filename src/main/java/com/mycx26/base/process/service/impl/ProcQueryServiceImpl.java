@@ -229,7 +229,10 @@ public class ProcQueryServiceImpl implements ProcQueryService {
         fullWrapper.setProcInst(procInst);
 
         fullWrapper.setMainForm(getMainFormByProcInstId(procInst.getProcDefKey(), procInstId));
-        fullWrapper.setSubItems(getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, null));
+        ProcDef procDef = getProcDefByDefKey(procInst.getProcDefKey());
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            fullWrapper.setSubItems(getSubItemsByProcInstId(procInst.getProcDefKey(), procInstId, null));
+        }
 
         return fullWrapper;
     }
@@ -242,7 +245,10 @@ public class ProcQueryServiceImpl implements ProcQueryService {
         fullWrapper.setProcInst(procInst);
 
         fullWrapper.setMainForm(getMainFormByFlowNo(procInst.getProcDefKey(), flowNo));
-        fullWrapper.setSubItems(getSubItemsByFlowNo(procInst.getProcDefKey(), flowNo, null));
+        ProcDef procDef = getProcDefByDefKey(procInst.getProcDefKey());
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            fullWrapper.setSubItems(getSubItemsByFlowNo(procInst.getProcDefKey(), flowNo, null));
+        }
 
         return fullWrapper;
     }

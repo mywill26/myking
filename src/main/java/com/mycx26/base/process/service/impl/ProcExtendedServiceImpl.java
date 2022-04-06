@@ -10,6 +10,7 @@ import com.mycx26.base.process.service.ProcExtendedService;
 import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.service.JdbcService;
 import com.mycx26.base.util.SqlUtil;
+import com.mycx26.base.util.StringUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -48,6 +49,8 @@ public class ProcExtendedServiceImpl implements ProcExtendedService {
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), procInst.getFlowNo());
 
         jdbcService.update(procDef.getMainForm(), updates, clauses);
-        jdbcService.update(procDef.getSubForm(), updates, clauses);
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            jdbcService.update(procDef.getSubForm(), updates, clauses);
+        }
     }
 }

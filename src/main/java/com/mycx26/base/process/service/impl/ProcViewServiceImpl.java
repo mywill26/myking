@@ -265,7 +265,8 @@ public class ProcViewServiceImpl implements ProcViewService {
 
         ApproveView approveView = new ApproveView().setViewKey(procNode.getViewKey())
                 .setProcInstId(approveViewQuery.getProcInstId())
-                .setProcInstStatusCode(procInst.getStatusCode());
+                .setProcInstStatusCode(procInst.getStatusCode())
+                .setProcDefKey(procInst.getProcDefKey());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
 
@@ -291,7 +292,10 @@ public class ProcViewServiceImpl implements ProcViewService {
 
         ParamWrapper paramWrapper = new ParamWrapper();
         paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), procInst.getFlowNo()));
-        paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
+        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
+        }
 
         approveView.setParamWrapper(paramWrapper);
 
@@ -303,7 +307,7 @@ public class ProcViewServiceImpl implements ProcViewService {
                     mainResolver.resolve(approveView);
                 }
             }
-            if (StringUtil.isNotBlank(procFormView.getSubResolver())) {
+            if (StringUtil.isNoneBlank(procDef.getSubForm(), procFormView.getSubResolver())) {
                 ProcViewSubResolver subResolver = SpringUtil.getBean2(procFormView.getSubResolver());
                 if (subResolver != null) {
                     subResolver.resolve(approveView);
@@ -330,7 +334,7 @@ public class ProcViewServiceImpl implements ProcViewService {
             throw new DataException("Process instance not exist");
         }
 
-        approveView.setProcInstStatusCode(procInst.getStatusCode());
+        approveView.setProcInstStatusCode(procInst.getStatusCode()).setProcDefKey(procInst.getProcDefKey());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
