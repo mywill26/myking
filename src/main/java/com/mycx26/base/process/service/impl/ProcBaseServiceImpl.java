@@ -72,4 +72,8 @@ public class ProcBaseServiceImpl extends ProcBaseService {
             procLockService.unlockByFlowNo(procInst.getFlowNo());
         }
     }
+
+    @Override
+    public void cancelHandle(String procInstId) {
+    }
 }

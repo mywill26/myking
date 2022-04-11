@@ -48,4 +48,11 @@ public abstract class ProcBaseService {
      * @param procInstId process instance id
      */
     public abstract void rejectFirstHandle(String procInstId);
+
+    /**
+     * handle when process is cancelled
+     *
+     * @param procInstId process instance id
+     */
+    public abstract void cancelHandle(String procInstId);
 }
