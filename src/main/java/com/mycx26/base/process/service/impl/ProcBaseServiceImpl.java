@@ -76,4 +76,14 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     @Override
     public void cancelHandle(String procInstId) {
     }
+
+    @Override
+    public void cancelHandle0(String procInstId) {
+        ProcInst procInst = procInstService.cancel(procInstId);
+        ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
+
+        if (procDef.getLockResource()) {
+            procLockService.unlockByFlowNo(procInst.getFlowNo());
+        }
+    }
 }

@@ -11,4 +11,6 @@ public class ProcessCancel {
     private String procInstId;
 
     private String creatorId;
+
+    private String comment;
 }

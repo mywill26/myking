@@ -21,6 +21,7 @@ import com.mycx26.base.process.service.ProcNodeService;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.process.service.bo.ProcessAction;
+import com.mycx26.base.process.service.bo.ProcessCancel;
 import com.mycx26.base.process.service.bo.ProcessStart;
 import com.mycx26.base.process.service.handler.ProcCreatePreHandler;
 import com.mycx26.base.service.ExternalUserService;
@@ -347,5 +348,27 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
 
         return procNode;
+    }
+
+    @Override
+    public void cancel(ApproveWrapper approveWrapper) {
+        cancelValidate(approveWrapper);
+
+        ProcessCancel processCancel = new ProcessCancel()
+                .setProcInstId(approveWrapper.getProcInstId())
+                .setCreatorId(approveWrapper.getUserId())
+                .setComment(approveWrapper.getComment());
+
+        procEngineService.cancelProcess(processCancel);
+    }
+
+    private void cancelValidate(ApproveWrapper approveWrapper) {
+        ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
+        if (null == procInst) {
+            throw new DataException("Process instance not exist");
+        }
+        if (StringUtil.isBlank(approveWrapper.getUserId())) {
+            throw new ParamException("User id is required");
+        }
     }
 }

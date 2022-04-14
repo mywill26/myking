@@ -59,4 +59,11 @@ public interface ProcCoreService {
      * @param approveWrapper approve wrapper
      */
     void rejectFirst(ApproveWrapper approveWrapper);
+
+    /**
+     * cancel process
+     *
+     * @param approveWrapper approve wrapper
+     */
+    void cancel(ApproveWrapper approveWrapper);
 }
