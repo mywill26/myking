@@ -181,10 +181,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setVars(vars);
 
         String procInstId = procEngineService.startProcess(start);
-        if (!(service instanceof ProcBaseServiceImpl)) {
-            ProcBaseService finalService = service;
-            threadPoolTaskExecutor.submit(() -> finalService.afterCreate(procParamWrapper));
-        }
+        ProcBaseService finalService = service;
+        threadPoolTaskExecutor.submit(() -> finalService.afterCreate(procParamWrapper));
         return procInstId;
     }
 
