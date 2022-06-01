@@ -14,6 +14,7 @@
         <result column="detail_view_key" property="detailViewKey" />
         <result column="is_lock_resource" property="lockResource" />
         <result column="resource_key" property="resourceKey" />
+        <result column="is_cancel" property="cancel" />
         <result column="description" property="description" />
         <result column="engine_key" property="engineKey" />
         <result column="engine_id" property="engineId" />
@@ -27,7 +28,7 @@
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, proc_def_key, proc_def_name, main_form, sub_form, flow_no_prefix, is_internal, detail_view_key,
-        is_lock_resource, resource_key, description, engine_key, engine_id, order_no,
+        is_lock_resource, resource_key, is_cancel, description, engine_key, engine_id, order_no,
         creator_id, create_time, modifier_id, modify_time, yn
     </sql>
 

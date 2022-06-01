@@ -35,7 +35,7 @@ public abstract class ProcBaseService {
     public abstract void endPostHandle(String procInstId);
 
     /**
-     * Callback after end of process.
+     * Asynchronous callback after process end.
      * The execution failure should not affect the main process.
      *
      * @param procInstId process instance id
@@ -57,9 +57,10 @@ public abstract class ProcBaseService {
     public abstract void cancelHandle(String procInstId);
 
     /**
-     * default implementation handle when process is cancelled
+     * Asynchronous callback after process cancel.
+     * The execution failure should not affect the main process.
      *
      * @param procInstId process instance id
      */
-    public abstract void cancelHandle0(String procInstId);
+    public abstract void afterCancelHandle(String procInstId);
 }

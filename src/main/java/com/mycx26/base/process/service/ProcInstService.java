@@ -43,7 +43,6 @@ public interface ProcInstService extends IService<ProcInst> {
      * propel process instance to CANCELED status
      *
      * @param procInstId process instance id
-     * @return process instance
      */
-    ProcInst cancel(String procInstId);
+    void cancel(String procInstId);
 }

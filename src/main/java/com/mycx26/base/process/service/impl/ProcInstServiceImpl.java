@@ -192,12 +192,7 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
     }
 
     @Override
-    public ProcInst cancel(String procInstId) {
-        ProcInst procInst = getByProcInstId(procInstId);
-        if (null == procInst) {
-            throw new ParamException("Process instance not exist");
-        }
-
+    public void cancel(String procInstId) {
         boolean flag = update(Wrappers.<ProcInst>lambdaUpdate()
                 .set(ProcInst::getStatusCode, InstanceStatus.CANCELED.getCode())
                 .eq(ProcInst::getProcInstId, procInstId)
@@ -207,7 +202,5 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
         if (!flag) {
             throw new DataException("Process has cancel");
         }
-
-        return procInst;
     }
 }

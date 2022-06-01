@@ -38,6 +38,14 @@ public interface ProcEngineService {
     // get to do list
     List<ProcTask> getToDoTasks(TaskQuery taskQuery);
 
+    /**
+     * get running tasks by process instance id
+     *
+     * @param procInstId process instance id
+     * @return running tasks
+     */
+    List<ProcTask> getRunningTasks(String procInstId);
+
     // approve
     void approve(ProcessAction processAction);
 
@@ -47,8 +55,10 @@ public interface ProcEngineService {
     // reject first
     void rejectFirst(ProcessAction processAction);
 
+    // cancel process
     void cancelProcess(ProcessCancel processCancel);
 
+    // restart process
     void restartProcess(ProcessStart processStart);
 
     // get process logs

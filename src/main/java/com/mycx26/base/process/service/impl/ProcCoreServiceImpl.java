@@ -348,9 +348,15 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         return procNode;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void cancel(ApproveWrapper approveWrapper) {
-        cancelValidate(approveWrapper);
+        ProcInst procInst = cancelValidate(approveWrapper);
+        ProcBaseService service = SpringUtil.getBean2(procInst.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (null == service) {
+            service = this.procBaseService;
+        }
+        service.cancelHandle(approveWrapper.getProcInstId());
 
         ProcessCancel processCancel = new ProcessCancel()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -358,9 +364,11 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setComment(approveWrapper.getComment());
 
         procEngineService.cancelProcess(processCancel);
+
+        threadPoolTaskExecutor.submit(() -> procBaseService.afterCancelHandle(procInst.getProcInstId()));
     }
 
-    private void cancelValidate(ApproveWrapper approveWrapper) {
+    private ProcInst cancelValidate(ApproveWrapper approveWrapper) {
         ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
         if (null == procInst) {
             throw new DataException("Process instance not exist");
@@ -368,5 +376,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         if (StringUtil.isBlank(approveWrapper.getUserId())) {
             throw new ParamException("User id is required");
         }
+
+        return procInst;
     }
 }

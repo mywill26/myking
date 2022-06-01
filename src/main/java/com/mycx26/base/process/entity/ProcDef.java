@@ -81,6 +81,12 @@ public class ProcDef implements Serializable {
     private String resourceKey;
 
     /**
+     * 是否可取消
+     */
+    @TableField("is_cancel")
+    private Boolean cancel;
+
+    /**
      * 描述
      */
     private String description;

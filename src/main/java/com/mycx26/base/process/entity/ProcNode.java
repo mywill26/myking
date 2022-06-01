@@ -113,6 +113,12 @@ public class ProcNode implements Serializable {
     private String tips;
 
     /**
+     * 是否可取消
+     */
+    @TableField("is_cancel")
+    private Boolean cancel;
+
+    /**
      * 是否支持移动设备审批
      */
     @TableField("is_mobile")

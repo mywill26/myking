@@ -74,7 +74,7 @@ public abstract class ProcNodeHandler {
     public abstract Map<String, Object> handleVars(ApproveWrapper approveWrapper);
 
     /**
-     * Callback after process approve.
+     * Asynchronous callback after process approve.
      * The execution failure should not affect the main process.
      *
      * @param approveWrapper approve wrapper
