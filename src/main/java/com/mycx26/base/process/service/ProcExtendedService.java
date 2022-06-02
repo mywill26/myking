@@ -8,5 +8,22 @@ import com.mycx26.base.process.entity.ProcInst;
  */
 public interface ProcExtendedService {
 
+    /**
+     * complete process instance id
+     *
+     * @param procInst process instance
+     */
     void completeProcInstId(ProcInst procInst);
+
+    /**
+     * is cancel
+     * cancel condition:
+     * ①. running process
+     * ②. process definition enable cancel
+     * ③. all running nodes are enable cancel
+     *
+     * @param procInst process instance
+     * @return true of false
+     */
+    boolean isCancel(ProcInst procInst);
 }

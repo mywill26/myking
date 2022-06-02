@@ -35,13 +35,13 @@ public class ProcDefController {
     }
 
     @PostMapping("add")
-    public Message add(ProcDef procDef) {
+    public Message<?> add(ProcDef procDef) {
         procDefService.add(procDef);
         return Message.success();
     }
 
     @PostMapping("modify")
-    public Message modify(ProcDef procDef) {
+    public Message<?> modify(ProcDef procDef) {
         procDefService.modify(procDef);
         return Message.success();
     }

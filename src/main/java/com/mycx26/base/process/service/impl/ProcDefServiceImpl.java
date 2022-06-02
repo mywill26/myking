@@ -1,7 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mycx26.base.context.UserContext;
 import com.mycx26.base.enump.Yn;
@@ -75,29 +75,50 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
         if (StringUtil.isBlank(procDef.getProcDefKey())) {
             StringUtil.append(sb, "Process definition key is required");
         }
-        doValidate(procDef, sb);
-    }
-
-    @Override
-    public void modify(ProcDef procDef) {
-        modifyValidate(procDef);
-        String procDefKey = procDef.getProcDefKey();
-
-        update(procDef.setProcDefKey(null).setModifierId(UserContext.getUserId()),
-                new UpdateWrapper<ProcDef>().eq("proc_def_key", procDefKey));
-    }
-
-    private void modifyValidate(ProcDef procDef) {
-        StringBuilder sb = new StringBuilder();
-        doValidate(procDef, sb);
-    }
-
-    private void doValidate(ProcDef procDef, StringBuilder sb) {
         if (StringUtil.isBlank(procDef.getProcDefName())) {
             StringUtil.append(sb, "Process definition name is required");
         }
         if (StringUtil.isBlank(procDef.getMainForm())) {
             StringUtil.append(sb, "Main form is required");
+        }
+
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
+    }
+
+    @Override
+    public void modify(ProcDef procDef) {
+        modifyValidate(procDef);
+        update(Wrappers.<ProcDef>lambdaUpdate()
+                .eq(ProcDef::getProcDefKey, procDef.getProcDefKey())
+                .set(ProcDef::getProcDefName, procDef.getProcDefName())
+                .set(ProcDef::getFlowNoPrefix, procDef.getFlowNoPrefix())
+                .set(ProcDef::getCancel, procDef.getCancel())
+                .set(ProcDef::getDescription, procDef.getDescription())
+                .set(ProcDef::getOrderNo, procDef.getOrderNo())
+                .set(ProcDef::getYn, procDef.getYn())
+                .set(ProcDef::getModifierId, UserContext.getUserId())
+        );
+    }
+
+    private void modifyValidate(ProcDef procDef) {
+        StringBuilder sb = new StringBuilder();
+        if (StringUtil.isBlank(procDef.getProcDefKey())) {
+            StringUtil.append(sb, "Process definition key is required");
+        }
+        if (StringUtil.isBlank(procDef.getProcDefName())) {
+            StringUtil.append(sb, "Process definition name is required");
+        }
+        if (StringUtil.isBlank(procDef.getFlowNoPrefix())) {
+            StringUtil.append(sb, "Flow no prefix is required");
+        }
+        boolean flag = null == procDef.getCancel()
+                || null == procDef.getOrderNo()
+                || null == procDef.getYn();
+        if (flag) {
+            StringUtil.append(sb, "Cancel, order no, yn are required");
         }
 
         if (sb.length() > 0) {

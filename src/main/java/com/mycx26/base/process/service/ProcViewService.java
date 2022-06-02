@@ -17,22 +17,59 @@ import java.util.List;
  */
 public interface ProcViewService {
 
-    // get to do list header info include process name & count etc
+    /**
+     * get to do list header info include process name & count etc
+     *
+     * @param userId user id
+     * @return to do headers
+     */
     List<ToDoHeader> getToDoHeaders(String userId);
 
-    // get to do list by process
+    /**
+     * get to do list by process
+     *
+     * @param taskQuery task query
+     * @return process to do
+     */
     ProcToDo getToDo(TaskQuery taskQuery);
 
-    // get to do list query columns info
+    /**
+     * get to do list query columns info
+     *
+     * @param procDefKey process definition key
+     * @return to do query columns
+     */
     List<ToDoQueryCol> getToDoQueryCols(String procDefKey);
 
+    /**
+     * get process approve view by process instance id & node key
+     *
+     * @param approveViewQuery approve view query
+     * @return approve view
+     */
     ApproveView getApproveView(ApproveViewQuery approveViewQuery);
 
+    /**
+     * get process detail view
+     *
+     * @param procInstId process instance id
+     * @return detail view
+     */
     ApproveView getDetailView(String procInstId);
 
-    // get approve view with process view col info
+    /**
+     * get approve view with process view col info
+     *
+     * @param approveViewQuery approve view query
+     * @return approve view
+     */
     ApproveView getApproveViewWithViewCol(ApproveViewQuery approveViewQuery);
 
-    // get detail view with process view col info
+    /**
+     * get detail view with process view col info
+     *
+     * @param procInstId process instance id
+     * @return detail view
+     */
     ApproveView getDetailViewWithViewCol(String procInstId);
 }

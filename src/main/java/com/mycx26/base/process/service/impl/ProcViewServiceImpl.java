@@ -18,6 +18,7 @@ import com.mycx26.base.process.enump.ProcFormType;
 import com.mycx26.base.process.enump.ProcViewColType;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcEngineService;
+import com.mycx26.base.process.service.ProcExtendedService;
 import com.mycx26.base.process.service.ProcFormViewService;
 import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcNodeService;
@@ -93,6 +94,9 @@ public class ProcViewServiceImpl implements ProcViewService {
 
     @Resource
     private ProcFormViewService procFormViewService;
+
+    @Resource
+    private ProcExtendedService procExtendedService;
 
     private Map<String, ExternalEnumService> eEnumMap = new HashMap<>();
 
@@ -269,7 +273,6 @@ public class ProcViewServiceImpl implements ProcViewService {
                 .setProcDefKey(procInst.getProcDefKey());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
-
         approveView.setProcDesc(procDef.getDescription());
         approveView.setNodeTips(procNode.getTips());
         approveView.setApprove(procNode.getApprove());
@@ -320,12 +323,28 @@ public class ProcViewServiceImpl implements ProcViewService {
 
     @Override
     public ApproveView getDetailView(String procInstId) {
+        ProcInst procInst = getDetailViewValidate(procInstId);
+        assert procInst != null;
+        ApproveView approveView = new ApproveView().setProcInstId(procInstId)
+                .setProcInstStatusCode(procInst.getStatusCode()).setProcDefKey(procInst.getProcDefKey());
+
+        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
+
+        // handle first node tips
+        ProcNode first = procNodeService.getFirst(procDef.getProcDefKey());
+        approveView.setNodeTips(first.getTips());
+        approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
+
+        approveView.setCancel(procExtendedService.isCancel(procInst));
+
+        return handleParamWrapper(procInst, approveView);
+    }
+
+    private ProcInst getDetailViewValidate(String procInstId) {
         if (StringUtil.isBlank(procInstId)) {
             return null;
         }
-
-        ApproveView approveView = new ApproveView().setProcInstId(procInstId);
-
         ProcInst procInst = procInstService.getByProcInstId(procInstId);
         if (null == procInst) {
             procInst = procInstService.getByFlowNo(procInstId);
@@ -334,16 +353,7 @@ public class ProcViewServiceImpl implements ProcViewService {
             throw new DataException("Process instance not exist");
         }
 
-        approveView.setProcInstStatusCode(procInst.getStatusCode()).setProcDefKey(procInst.getProcDefKey());
-
-        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
-        approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
-
-        ProcNode first = procNodeService.getFirst(procDef.getProcDefKey());     // first node tips
-        approveView.setNodeTips(first.getTips());
-        approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
-
-        return handleParamWrapper(procInst, approveView);
+        return procInst;
     }
 
     private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {

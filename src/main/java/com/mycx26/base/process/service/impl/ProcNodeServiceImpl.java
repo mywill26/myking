@@ -114,28 +114,47 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
 
     @Override
     public void modify(ProcNode procNode) {
-        if (StringUtil.isAnyBlank(procNode.getProcDefKey(), procNode.getNodeKey())) {
-            throw new ParamException("Process definition key, node key are required");
-        }
+        modifyValidate(procNode);
 
         if (StringUtil.isNotBlank(procNode.getTips())) {
             procNode.setTips(StringEscapeUtils.unescapeHtml4(procNode.getTips()));
         }
         update(Wrappers.<ProcNode>lambdaUpdate()
+                .eq(ProcNode::getProcDefKey, procNode.getProcDefKey())
+                .eq(ProcNode::getNodeKey, procNode.getNodeKey())
                 .set(StringUtil.isNotBlank(procNode.getNodeName()), ProcNode::getNodeName, procNode.getNodeName())
-//                .set(ProcNode::getNodeHandler, procNode.getNodeHandler())
-//                .set(ProcNode::getViewKey, procNode.getViewKey())
                 .set(ProcNode::getRejectPrevious, procNode.getRejectPrevious())
                 .set(ProcNode::getRejectFirst, procNode.getRejectFirst())
-                .set(ProcNode::getFirst, procNode.getFirst())
                 .set(ProcNode::getTips, procNode.getTips())
+                .set(ProcNode::getCancel, procNode.getCancel())
                 .set(ProcNode::getYn, procNode.getYn())
                 .set(ProcNode::getModifierId, UserContext.getUserId())
-                .eq(ProcNode::getProcDefKey, procNode.getProcDefKey()).eq(ProcNode::getNodeKey, procNode.getNodeKey())
         );
 
         procNodeService.deleteCacheByProcDefKeyAndNodeKey(procNode.getProcDefKey(), procNode.getNodeKey());
         procNodeService.deleteFirstCacheByProcDefKey(procNode.getProcDefKey());
+    }
+
+    private void modifyValidate(ProcNode procNode) {
+        StringBuilder sb = new StringBuilder();
+        if (StringUtil.isAnyBlank(procNode.getProcDefKey(), procNode.getNodeKey())) {
+            throw new ParamException("Process definition key, node key are required");
+        }
+        if (StringUtil.isBlank(procNode.getNodeName())) {
+            StringUtil.append(sb, "Process node name is required");
+        }
+        boolean flag = null == procNode.getRejectPrevious()
+                || null == procNode.getRejectFirst()
+                || null == procNode.getCancel()
+                || null == procNode.getYn();
+        if (flag) {
+            StringUtil.append(sb, "Reject previous, reject first, cancel, yn are required");
+        }
+
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
     }
 
     @Cacheable(value = ProcCacheConstant.NODE_FIRST, cacheManager = CacheConstant.CENTER_MANAGER,
