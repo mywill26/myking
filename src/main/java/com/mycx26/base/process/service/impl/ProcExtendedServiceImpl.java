@@ -1,6 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mycx26.base.context.UserContext;
 import com.mycx26.base.process.constant.ProcConstant;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
@@ -72,7 +73,11 @@ public class ProcExtendedServiceImpl implements ProcExtendedService {
     @Override
     public boolean isCancel(ProcInst procInst) {
         String procInstId = procInst.getProcInstId();
-        if (!InstanceStatus.RUN.getCode().equals(procInst.getProcInstStatus())) {
+        if (!InstanceStatus.RUN.getCode().equals(procInst.getStatusCode())) {
+            return false;
+        }
+
+        if (!procInst.getCreatorId().equals(UserContext.getUserId())) {
             return false;
         }
 

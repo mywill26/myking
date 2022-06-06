@@ -95,4 +95,12 @@ public class ProcCoreController {
 
         return Message.success();
     }
+
+    @PostMapping("cancel")
+    public Message<?> cancel(ApproveWrapper approveWrapper) {
+        approveWrapper.setUserId(UserContext.getUserId());
+        procCoreService.cancel(approveWrapper);
+
+        return Message.success();
+    }
 }

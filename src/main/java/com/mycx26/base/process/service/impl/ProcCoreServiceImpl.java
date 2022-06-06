@@ -375,6 +375,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
         if (StringUtil.isBlank(approveWrapper.getUserId())) {
             throw new ParamException("User id is required");
+        } else if (!approveWrapper.getUserId().equals(procInst.getCreatorId())) {
+            throw new ParamException("Only creator can cancel");
         }
 
         return procInst;
