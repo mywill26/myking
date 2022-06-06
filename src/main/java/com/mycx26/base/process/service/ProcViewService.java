@@ -50,12 +50,20 @@ public interface ProcViewService {
     ApproveView getApproveView(ApproveViewQuery approveViewQuery);
 
     /**
-     * get process detail view
+     * get process detail view by process instance id
      *
      * @param procInstId process instance id
      * @return detail view
      */
     ApproveView getDetailView(String procInstId);
+
+    /**
+     * get process detail view by flow no
+     *
+     * @param flowNo flow no
+     * @return detail view
+     */
+    ApproveView getDetailView2(String flowNo);
 
     /**
      * get approve view with process view col info

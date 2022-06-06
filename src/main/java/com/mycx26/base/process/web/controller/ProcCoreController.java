@@ -59,6 +59,11 @@ public class ProcCoreController {
         return Message.success(procViewService.getDetailView(procInstId));
     }
 
+    @RequestMapping("getDetailView2")
+    public Message<ApproveView> getDetailView2(String flowNo) {
+        return Message.success(procViewService.getDetailView2(flowNo));
+    }
+
     @PostMapping("approve")
     public Message<?> approve(ApproveWrapper approveWrapper) {
         approveWrapper.setUserId(UserContext.getUserId());

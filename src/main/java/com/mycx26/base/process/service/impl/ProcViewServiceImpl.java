@@ -324,8 +324,28 @@ public class ProcViewServiceImpl implements ProcViewService {
     @Override
     public ApproveView getDetailView(String procInstId) {
         ProcInst procInst = getDetailViewValidate(procInstId);
+        if (null == procInst) {
+            return null;
+        }
+
+        return doGetDetailView(procInst);
+    }
+
+    private ProcInst getDetailViewValidate(String procInstId) {
+        if (StringUtil.isBlank(procInstId)) {
+            return null;
+        }
+        ProcInst procInst = procInstService.getByProcInstId(procInstId);
+        if (null == procInst) {
+            throw new DataException("Process instance not exist");
+        }
+
+        return procInst;
+    }
+
+    private ApproveView doGetDetailView(ProcInst procInst) {
         assert procInst != null;
-        ApproveView approveView = new ApproveView().setProcInstId(procInstId)
+        ApproveView approveView = new ApproveView().setProcInstId(procInst.getProcInstId())
                 .setProcInstStatusCode(procInst.getStatusCode()).setProcDefKey(procInst.getProcDefKey());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
@@ -339,21 +359,6 @@ public class ProcViewServiceImpl implements ProcViewService {
         approveView.setCancel(procExtendedService.isCancel(procInst));
 
         return handleParamWrapper(procInst, approveView);
-    }
-
-    private ProcInst getDetailViewValidate(String procInstId) {
-        if (StringUtil.isBlank(procInstId)) {
-            return null;
-        }
-        ProcInst procInst = procInstService.getByProcInstId(procInstId);
-        if (null == procInst) {
-            procInst = procInstService.getByFlowNo(procInstId);
-        }
-        if (null == procInst) {
-            throw new DataException("Process instance not exist");
-        }
-
-        return procInst;
     }
 
     private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {
@@ -414,6 +419,28 @@ public class ProcViewServiceImpl implements ProcViewService {
         }
 
         return subItems;
+    }
+
+    @Override
+    public ApproveView getDetailView2(String flowNo) {
+        ProcInst procInst = getDetailView2Validate(flowNo);
+        if (null == procInst) {
+            return null;
+        }
+
+        return doGetDetailView(procInst);
+    }
+
+    private ProcInst getDetailView2Validate(String flowNo) {
+        if (StringUtil.isBlank(flowNo)) {
+            return null;
+        }
+        ProcInst procInst = procInstService.getByFlowNo(flowNo);
+        if (null == procInst) {
+            throw new DataException("Process instance not exist");
+        }
+
+        return procInst;
     }
 
     @Override
