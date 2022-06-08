@@ -43,4 +43,8 @@ public abstract class DefaultNodeHandler extends ProcNodeHandler {
     @Override
     public void rejectFirstHandle(ApproveWrapper approveWrapper) {
     }
+
+    @Override
+    public void reassignValidate(ApproveWrapper approveWrapper) {
+    }
 }

@@ -2,6 +2,7 @@ package com.mycx26.base.process.service;
 
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
+import com.mycx26.base.process.service.bo.ReassignWrapper;
 
 import java.util.Map;
 
@@ -66,4 +67,11 @@ public interface ProcCoreService {
      * @param approveWrapper approve wrapper
      */
     void cancel(ApproveWrapper approveWrapper);
+
+    /**
+     *  reassign task
+     *
+     * @param reassignWrapper reassign wrapper
+     */
+    void reassign(ReassignWrapper reassignWrapper);
 }

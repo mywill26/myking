@@ -95,6 +95,13 @@ public abstract class ProcNodeHandler {
      */
     public abstract void rejectFirstHandle(ApproveWrapper approveWrapper);
 
+    /**
+     * reassign validate
+     *
+     * @param approveWrapper approve wrapper
+     */
+    public abstract void reassignValidate(ApproveWrapper approveWrapper);
+
     // ==============================================================>
 
     protected Map<String, Object> getMainFormByFlowNo(ApproveWrapper approveWrapper) {

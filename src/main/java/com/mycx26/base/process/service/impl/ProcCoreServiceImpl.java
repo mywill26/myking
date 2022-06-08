@@ -23,9 +23,12 @@ import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.process.service.bo.ProcessAction;
 import com.mycx26.base.process.service.bo.ProcessCancel;
 import com.mycx26.base.process.service.bo.ProcessStart;
+import com.mycx26.base.process.service.bo.ReassignWrapper;
+import com.mycx26.base.process.service.bo.TaskReassign;
 import com.mycx26.base.process.service.handler.ProcCreatePreHandler;
 import com.mycx26.base.service.ExternalUserService;
 import com.mycx26.base.util.CollectionUtil;
+import com.mycx26.base.util.ExpAssert;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.StringUtil;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -260,8 +263,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     private ProcNodeHandler preHandle(ApproveWrapper approveWrapper) {
         ProcInst procInst = approveValidate(approveWrapper);
 
-        approveWrapper.setFlowNo(procInst.getFlowNo());     // set flow no
-        approveWrapper.setProcDef(procDefService.getByKey(procInst.getProcDefKey()));   // set process definition
+        approveWrapper.setFlowNo(procInst.getFlowNo());
+        approveWrapper.setProcDef(procDefService.getByKey(procInst.getProcDefKey()));
         if (null == approveWrapper.getMainForm()) {
             approveWrapper.setMainForm(Collections.emptyMap());
         }
@@ -380,5 +383,28 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
 
         return procInst;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void reassign(ReassignWrapper reassignWrapper) {
+        ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
+        ProcNodeHandler handler = preHandle(reassignWrapper);
+        if (handler != null) {
+            handler.reassignValidate(reassignWrapper);
+
+            handler.handleMainForm(reassignWrapper);
+            handler.handleSubForm(reassignWrapper);
+            handler.handleBizForm(reassignWrapper);
+        }
+
+        TaskReassign reassign = new TaskReassign()
+                .setTaskId(reassignWrapper.getTaskId())
+                .setUserId(reassignWrapper.getUserId())
+                .setComment(reassignWrapper.getComment())
+                .setToUserId(reassignWrapper.getToUserId())
+                .setEngineKey(reassignWrapper.getProcDef().getEngineKey());
+
+        procEngineService.reassign(reassign);
     }
 }
