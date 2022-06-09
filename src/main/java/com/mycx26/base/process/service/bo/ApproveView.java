@@ -27,6 +27,8 @@ public class ApproveView {
 
     private Boolean rejectFirst;
 
+    private Boolean reassign;
+
     private Boolean cancel;
 
     private ParamWrapper paramWrapper;

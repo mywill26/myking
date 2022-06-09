@@ -7,6 +7,7 @@ import com.mycx26.base.process.service.bo.ApproveView;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.process.service.bo.ProcToDo;
+import com.mycx26.base.process.service.bo.ReassignWrapper;
 import com.mycx26.base.process.service.bo.ToDoHeader;
 import com.mycx26.base.process.service.bo.ToDoQueryCol;
 import com.mycx26.base.process.service.query.ApproveViewQuery;
@@ -100,6 +101,14 @@ public class ProcCoreController {
     public Message<?> cancel(ApproveWrapper approveWrapper) {
         approveWrapper.setUserId(UserContext.getUserId());
         procCoreService.cancel(approveWrapper);
+
+        return Message.success();
+    }
+
+    @PostMapping("reassign")
+    public Message<?> reassign(ReassignWrapper reassignWrapper) {
+        reassignWrapper.setUserId(UserContext.getUserId());
+        procCoreService.reassign(reassignWrapper);
 
         return Message.success();
     }

@@ -113,6 +113,12 @@ public class ProcNode implements Serializable {
     private String tips;
 
     /**
+     * 是否可转派
+     */
+    @TableField("is_reassign")
+    private Boolean reassign;
+
+    /**
      * 是否可取消
      */
     @TableField("is_cancel")

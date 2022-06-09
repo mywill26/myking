@@ -96,11 +96,11 @@ public abstract class ProcNodeHandler {
     public abstract void rejectFirstHandle(ApproveWrapper approveWrapper);
 
     /**
-     * reassign validate
+     * reassign data handle
      *
      * @param approveWrapper approve wrapper
      */
-    public abstract void reassignValidate(ApproveWrapper approveWrapper);
+    public abstract void reassignHandle(ApproveWrapper approveWrapper);
 
     // ==============================================================>
 
@@ -150,6 +150,10 @@ public abstract class ProcNodeHandler {
 
     protected void updateByFlowNo(ApproveWrapper approveWrapper, String tblName, Map<String, Object> updates) {
         procUpdateService.updateByFlowNo(approveWrapper.getFlowNo(), tblName, updates);
+    }
+
+    protected void updateMainFormByFlowNo(ApproveWrapper approveWrapper, Map<String, Object> updates) {
+        updateByFlowNo(approveWrapper, approveWrapper.getProcDef().getMainForm(), updates);
     }
 
     protected void updateById(Long id, String tblName, Map<String, Object> updates) {

@@ -17,6 +17,7 @@ import com.mycx26.base.process.service.ProcNodeService;
 import com.mycx26.base.process.service.query.NodeQuery;
 import com.mycx26.base.service.dto.PageData;
 import com.mycx26.base.util.CollectionUtil;
+import com.mycx26.base.util.ExpAssert;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.StringUtil;
 import org.apache.commons.text.StringEscapeUtils;
@@ -126,6 +127,7 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
                 .set(ProcNode::getRejectPrevious, procNode.getRejectPrevious())
                 .set(ProcNode::getRejectFirst, procNode.getRejectFirst())
                 .set(ProcNode::getTips, procNode.getTips())
+                .set(ProcNode::getReassign, procNode.getReassign())
                 .set(ProcNode::getCancel, procNode.getCancel())
                 .set(ProcNode::getYn, procNode.getYn())
                 .set(ProcNode::getModifierId, UserContext.getUserId())
@@ -136,19 +138,19 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
     }
 
     private void modifyValidate(ProcNode procNode) {
+        ExpAssert.isFalse(StringUtil.isAnyBlank(procNode.getProcDefKey(), procNode.getNodeKey()),
+                "Process definition key, node key are required");
         StringBuilder sb = new StringBuilder();
-        if (StringUtil.isAnyBlank(procNode.getProcDefKey(), procNode.getNodeKey())) {
-            throw new ParamException("Process definition key, node key are required");
-        }
         if (StringUtil.isBlank(procNode.getNodeName())) {
             StringUtil.append(sb, "Process node name is required");
         }
         boolean flag = null == procNode.getRejectPrevious()
                 || null == procNode.getRejectFirst()
+                || null == procNode.getReassign()
                 || null == procNode.getCancel()
                 || null == procNode.getYn();
         if (flag) {
-            StringUtil.append(sb, "Reject previous, reject first, cancel, yn are required");
+            StringUtil.append(sb, "Reject previous, reject first, reassign, cancel, yn are required");
         }
 
         if (sb.length() > 0) {

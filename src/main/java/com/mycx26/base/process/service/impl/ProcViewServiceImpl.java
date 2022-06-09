@@ -278,6 +278,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         approveView.setApprove(procNode.getApprove());
         approveView.setRejectPrevious(procNode.getRejectPrevious());
         approveView.setRejectFirst(procNode.getRejectFirst());
+        approveView.setReassign(procNode.getReassign());
 
         // handle process log
         approveView.setLogs(procEngineService.getProcLogs(approveViewQuery.getProcInstId()));

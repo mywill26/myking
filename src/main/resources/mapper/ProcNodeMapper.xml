@@ -20,6 +20,7 @@
         <result column="is_reject_first" property="rejectFirst" />
         <result column="is_first" property="first" />
         <result column="tips" property="tips" />
+        <result column="is_reassign" property="reassign" />
         <result column="is_cancel" property="cancel" />
         <result column="creator_id" property="creatorId" />
         <result column="create_time" property="createTime" />
@@ -31,7 +32,7 @@
     <sql id="Base_Column_List">
         id, node_key, node_name, proc_def_key, category_code, node_handler, assignees_var, assignee_type_code,
         role_code, view_key, approve_name, is_approve, is_reject_previous, is_reject_first,
-        is_first, tips, is_cancel,
+        is_first, tips, is_reassign, is_cancel,
         creator_id, create_time, modifier_id, modify_time, yn
     </sql>
 

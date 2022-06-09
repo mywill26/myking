@@ -373,14 +373,10 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     private ProcInst cancelValidate(ApproveWrapper approveWrapper) {
         ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
-        if (null == procInst) {
-            throw new DataException("Process instance not exist");
-        }
-        if (StringUtil.isBlank(approveWrapper.getUserId())) {
-            throw new ParamException("User id is required");
-        } else if (!approveWrapper.getUserId().equals(procInst.getCreatorId())) {
-            throw new ParamException("Only creator can cancel");
-        }
+        ExpAssert.isFalse(null == procInst, "Process instance not exist");
+        ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getUserId()), "User id is required");
+        assert procInst != null;
+        ExpAssert.isTrue(approveWrapper.getUserId().equals(procInst.getCreatorId()), "Only creator can cancel");
 
         return procInst;
     }
@@ -388,15 +384,12 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void reassign(ReassignWrapper reassignWrapper) {
-        ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
         ProcNodeHandler handler = preHandle(reassignWrapper);
         if (handler != null) {
-            handler.reassignValidate(reassignWrapper);
-
-            handler.handleMainForm(reassignWrapper);
-            handler.handleSubForm(reassignWrapper);
-            handler.handleBizForm(reassignWrapper);
+            handler.reassignHandle(reassignWrapper);
         }
+
+        ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
 
         TaskReassign reassign = new TaskReassign()
                 .setTaskId(reassignWrapper.getTaskId())
