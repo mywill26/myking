@@ -2,6 +2,7 @@ package com.mycx26.base.process.web.controller;
 
 import com.mycx26.base.process.service.ProcFlowNoService;
 import com.mycx26.base.service.dto.Message;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,7 @@ import javax.annotation.Resource;
 @RestController
 public class ProcFlowNoController {
 
+    @Lazy
     @Resource
     private ProcFlowNoService procFlowNoService;
 

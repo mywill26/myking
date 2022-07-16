@@ -47,6 +47,7 @@ import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -89,6 +90,7 @@ public class ProcViewServiceImpl implements ProcViewService {
     @Resource
     private ToDoColService toDoColService;
 
+    @Lazy
     @Resource
     private ExternalUserService externalUserService;
 

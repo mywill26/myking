@@ -22,6 +22,7 @@ import com.mycx26.base.service.dto.PageData;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,7 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
     @Resource
     private EnumValueService enumValueService;
 
+    @Lazy
     @Resource
     private ExternalUserService externalUserService;
 
