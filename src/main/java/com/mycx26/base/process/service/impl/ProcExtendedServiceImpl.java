@@ -1,6 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Maps;
 import com.mycx26.base.context.UserContext;
 import com.mycx26.base.process.constant.ProcConstant;
 import com.mycx26.base.process.entity.ProcDef;
@@ -21,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,13 +58,15 @@ public class ProcExtendedServiceImpl implements ProcExtendedService {
                 .eq(ProcInst::getFlowNo, procInst.getFlowNo()));
 
         ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
-        Map<String, Object> updates = new HashMap<>(1);
+        Map<String, Object> updates = Maps.newHashMapWithExpectedSize(1);
         updates.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInst.getProcInstId());
 
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), procInst.getFlowNo());
 
-        jdbcService.update(procDef.getMainForm(), updates, clauses);
+        if (StringUtil.isNotBlank(procDef.getMainForm())) {
+            jdbcService.update(procDef.getMainForm(), updates, clauses);
+        }
         if (StringUtil.isNotBlank(procDef.getSubForm())) {
             jdbcService.update(procDef.getSubForm(), updates, clauses);
         }

@@ -105,29 +105,27 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             ((ProcCreatePreHandler)procBaseService).createPreHandle(procParamWrapper);
         }
         // add process instance
-        ProcInst procInst = new ProcInst().setFlowNo(procParamWrapper.getFlowNo())
-                .setProcInstName(procParamWrapper.getProcInstName())
-                .setProcDefKey(procDef.getProcDefKey())
-                .setStatusCode(procParamWrapper.getProcInstStatusCode())
-                .setCreatorId(procParamWrapper.getUserId());
-        procInstService.add(procInst);
+        ProcInst procInst = addProcInst(procParamWrapper, procDef);
         // handle main form
-        procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);
+        if (StringUtil.isNotBlank(procDef.getMainForm())) {
+            procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);
+        }
         // handle sub form, if sub form configured, suit for simple process
         if (StringUtil.isNotBlank(procDef.getSubForm())) {
             procFormService.addSubForm(procDef.getSubForm(), procParamWrapper);
             createResourceLock(procParamWrapper, procDef);
         }
 
-        String procInstId = null;
         // last, interaction with pe
-        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
-            procInstId = start(procParamWrapper);
-            procInst.setProcInstId(procInstId);
-            procExtendedService.completeProcInstId(procInst);
-        }
+        return handleProcEngine(procParamWrapper, procInst);
+    }
 
-        return procInstId;
+    private void createBaseValidate(ProcParamWrapper procParamWrapper) {
+        StringBuilder sb = validateProcDefAndUser(procParamWrapper);
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+            throw new ParamException(sb.toString());
+        }
     }
 
     private void handleFlowNo(ProcParamWrapper procParamWrapper, ProcDef procDef) {
@@ -144,16 +142,19 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
     }
 
-    private void createBaseValidate(ProcParamWrapper procParamWrapper) {
-        StringBuilder sb = validateProcDefAndUser(procParamWrapper);
+    private ProcInst addProcInst(ProcParamWrapper procParamWrapper, ProcDef procDef) {
         if (StringUtil.isBlank(procParamWrapper.getProcInstStatusCode())) {
-            StringUtil.append(sb, "Process instance status code is required");
+            procParamWrapper.setProcInstStatusCode(InstanceStatus.RUN.getCode());
         }
 
-        if (sb.length() > 0) {
-            sb.delete(sb.length() - 1, sb.length());
-            throw new ParamException(sb.toString());
-        }
+        ProcInst procInst = new ProcInst().setFlowNo(procParamWrapper.getFlowNo())
+                .setProcInstName(procParamWrapper.getProcInstName())
+                .setProcDefKey(procDef.getProcDefKey())
+                .setStatusCode(procParamWrapper.getProcInstStatusCode())
+                .setCreatorId(procParamWrapper.getUserId());
+        procInstService.add(procInst);
+
+        return procInst;
     }
 
     private void createResourceLock(ProcParamWrapper procParamWrapper, ProcDef procDef) {
@@ -166,6 +167,17 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                     .collect(Collectors.toList())
             );
         }
+    }
+
+    private String handleProcEngine(ProcParamWrapper procParamWrapper, ProcInst procInst) {
+        String procInstId = null;
+        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
+            procInstId = start(procParamWrapper);
+            procInst.setProcInstId(procInstId);
+            procExtendedService.completeProcInstId(procInst);
+        }
+
+        return procInstId;
     }
 
     @Override
