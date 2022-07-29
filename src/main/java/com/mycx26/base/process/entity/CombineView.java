@@ -1,7 +1,5 @@
 package com.mycx26.base.process.entity;
-
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -13,17 +11,17 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 流程表单视图
+ * 组合视图
  * </p>
  *
  * @author mycx26
- * @since 2021-05-17
+ * @since 2022-07-24
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("flow_proc_form_view")
-public class ProcFormView implements Serializable {
+@TableName("flow_combine_view")
+public class CombineView implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,30 +32,19 @@ public class ProcFormView implements Serializable {
     private Long id;
 
     /**
-     * 视图名称
+     * 视图1
      */
-    private String viewName;
+    private String viewKey1;
 
     /**
-     * 视图key
+     * 视图2
      */
-    private String viewKey;
+    private String viewKey2;
 
     /**
-     * 是否组合
+     * 顺序号
      */
-    @TableField("is_combine")
-    private Boolean combine;
-
-    /**
-     * 主表解析器
-     */
-    private String mainResolver;
-
-    /**
-     * 子表解析器
-     */
-    private String subResolver;
+    private Integer orderNo;
 
     /**
      * 创建人id
@@ -68,16 +55,6 @@ public class ProcFormView implements Serializable {
      * 创建时间
      */
     private LocalDateTime createTime;
-
-    /**
-     * 修改人id
-     */
-    private String modifierId;
-
-    /**
-     * 修改时间
-     */
-    private LocalDateTime modifyTime;
 
     /**
      * 是否可用

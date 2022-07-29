@@ -8,6 +8,7 @@ import com.mycx26.base.enump.QueryFormType;
 import com.mycx26.base.enump.Yn;
 import com.mycx26.base.exception.DataException;
 import com.mycx26.base.process.constant.ProcConstant;
+import com.mycx26.base.process.entity.CombineView;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcFormView;
 import com.mycx26.base.process.entity.ProcInst;
@@ -16,6 +17,7 @@ import com.mycx26.base.process.entity.ProcViewCol;
 import com.mycx26.base.process.entity.ToDoCol;
 import com.mycx26.base.process.enump.ProcFormType;
 import com.mycx26.base.process.enump.ProcViewColType;
+import com.mycx26.base.process.service.CombineViewService;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcEngineService;
 import com.mycx26.base.process.service.ProcExtendedService;
@@ -44,6 +46,7 @@ import com.mycx26.base.service.JdbcService;
 import com.mycx26.base.service.bo.ContextUser;
 import com.mycx26.base.service.bo.ParamWrapper;
 import com.mycx26.base.util.CollectionUtil;
+import com.mycx26.base.util.ExpAssert;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
@@ -99,6 +102,9 @@ public class ProcViewServiceImpl implements ProcViewService {
 
     @Resource
     private ProcExtendedService procExtendedService;
+
+    @Resource
+    private CombineViewService combineViewService;
 
     private Map<String, ExternalEnumService> eEnumMap = new HashMap<>();
 
@@ -289,39 +295,58 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private ApproveView handleParamWrapper(ProcInst procInst, ApproveView approveView) {
-        Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(approveView.getViewKey())
-                .stream().collect(Collectors.groupingBy(ProcViewCol::getFormTypeCode));
-
-        if (collect.isEmpty()) {
-            throw new DataException("View config error");
-        }
-
-        ParamWrapper paramWrapper = new ParamWrapper();
-        paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), procInst.getFlowNo()));
-        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
-        if (StringUtil.isNotBlank(procDef.getSubForm())) {
-            paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
-        }
-
-        approveView.setParamWrapper(paramWrapper);
-
         ProcFormView procFormView = procFormViewService.getByViewKey(approveView.getViewKey());
+        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        // combine view
+        if (procFormView != null && procFormView.getCombine()) {
+            handleCombineView(procInst, approveView);
+        } else {
+            Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(approveView.getViewKey())
+                    .stream().collect(Collectors.groupingBy(ProcViewCol::getFormTypeCode));
+            ExpAssert.isFalse(collect.isEmpty(), "View config error");
+
+            ParamWrapper paramWrapper = new ParamWrapper();
+            paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), procInst.getFlowNo()));
+            if (StringUtil.isNotBlank(procDef.getSubForm())) {
+                paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
+            }
+
+            approveView.setParamWrapper(paramWrapper);
+        }
+
         if (procFormView != null) {
-            if (StringUtil.isNotBlank(procFormView.getMainResolver())) {
-                ProcViewMainResolver mainResolver = SpringUtil.getBean2(procFormView.getMainResolver());
-                if (mainResolver != null) {
-                    mainResolver.resolve(approveView);
-                }
-            }
-            if (StringUtil.isNoneBlank(procDef.getSubForm(), procFormView.getSubResolver())) {
-                ProcViewSubResolver subResolver = SpringUtil.getBean2(procFormView.getSubResolver());
-                if (subResolver != null) {
-                    subResolver.resolve(approveView);
-                }
-            }
+            postResolve(procFormView, procDef, approveView);
         }
 
         return approveView;
+    }
+
+    private void handleCombineView(ProcInst procInst, ApproveView approveView) {
+        List<CombineView> views = combineViewService.getByViewKey1(approveView.getViewKey());
+        ExpAssert.isFalse(CollectionUtil.isEmpty(views), "Combine view config error");
+        ParamWrapper wrapper = new ParamWrapper();
+        wrapper.setMainForm(new LinkedHashMap<>());
+        views.forEach(e -> {
+            List<ProcViewCol> cols = procViewColService.getByViewKey(e.getViewKey2());
+            wrapper.getMainForm().putAll(handleMainForm(cols, procInst.getFlowNo()));
+        });
+
+        approveView.setParamWrapper(wrapper);
+    }
+
+    private void postResolve(ProcFormView procFormView, ProcDef procDef, ApproveView approveView) {
+        if (StringUtil.isNotBlank(procFormView.getMainResolver())) {
+            ProcViewMainResolver mainResolver = SpringUtil.getBean2(procFormView.getMainResolver());
+            if (mainResolver != null) {
+                mainResolver.resolve(approveView);
+            }
+        }
+        if (StringUtil.isNoneBlank(procDef.getSubForm(), procFormView.getSubResolver())) {
+            ProcViewSubResolver subResolver = SpringUtil.getBean2(procFormView.getSubResolver());
+            if (subResolver != null) {
+                subResolver.resolve(approveView);
+            }
+        }
     }
 
     @Override

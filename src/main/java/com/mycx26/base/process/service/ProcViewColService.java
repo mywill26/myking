@@ -15,5 +15,11 @@ import java.util.List;
  */
 public interface ProcViewColService extends BaseService<ProcViewCol> {
 
+    /**
+     * get by view key
+     *
+     * @param viewKey view key
+     * @return process view columns
+     */
     List<ProcViewCol> getByViewKey(String viewKey);
 }

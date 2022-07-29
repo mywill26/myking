@@ -32,6 +32,10 @@ public class ProcViewColServiceImpl extends BaseServiceImpl<ProcViewColMapper, P
             return Collections.emptyList();
         }
 
-        return list(new QueryWrapper<ProcViewCol>().eq("view_key", viewKey).eq("yn", Yn.YES.getCode()));
+        return list(new QueryWrapper<ProcViewCol>()
+                .eq("view_key", viewKey)
+                .eq("yn", Yn.YES.getCode())
+                .orderByAsc("order_no")
+        );
     }
 }
