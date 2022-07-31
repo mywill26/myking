@@ -200,7 +200,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
         String procInstId = procEngineService.startProcess(start);
         ProcBaseService finalService = service;
-        threadPoolTaskExecutor.submit(() -> finalService.afterCreate(procParamWrapper));
+        threadPoolTaskExecutor.execute(() -> finalService.afterCreate(procParamWrapper));
         return procInstId;
     }
 
@@ -247,7 +247,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
         procEngineService.approve(processAction);
 
-        threadPoolTaskExecutor.submit(() -> {
+        threadPoolTaskExecutor.execute(() -> {
             ProcNode procNode = procNodeService.getByProcDefKeyAndNodeKey(
                     approveWrapper.getProcDef().getProcDefKey(), approveWrapper.getNodeKey());
             ProcNodeHandler handler = SpringUtil.getBean2(procNode.getNodeHandler());
@@ -383,7 +383,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
         procEngineService.cancelProcess(processCancel);
 
-        threadPoolTaskExecutor.submit(() -> procBaseService.afterCancelHandle(procInst.getProcInstId()));
+        threadPoolTaskExecutor.execute(() -> procBaseService.afterCancelHandle(procInst.getProcInstId()));
     }
 
     private ProcInst cancelValidate(ApproveWrapper approveWrapper) {
