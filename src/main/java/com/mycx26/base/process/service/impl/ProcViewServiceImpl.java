@@ -1,6 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Maps;
 import com.mycx26.base.constant.SqlConstant;
 import com.mycx26.base.constant.Symbol;
 import com.mycx26.base.enump.QueryColType;
@@ -106,7 +107,7 @@ public class ProcViewServiceImpl implements ProcViewService {
     @Resource
     private CombineViewService combineViewService;
 
-    private Map<String, ExternalEnumService> eEnumMap = new HashMap<>();
+    private final Map<String, ExternalEnumService> eEnumMap = new HashMap<>();
 
     @Override
     public List<ToDoHeader> getToDoHeaders(String userId) {
@@ -390,7 +391,7 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put("pi.flow_no", flowNo);
         Map<String, Object> mainForm = jdbcService.selectMap2(mainCols.get(0).getTblName(),
                 mainCols.stream().map(ProcViewCol::getColCode).collect(Collectors.toList()),
@@ -398,14 +399,21 @@ public class ProcViewServiceImpl implements ProcViewService {
         );
 
         Map<String, List<ProcViewCol>> collect = mainCols.stream().collect(Collectors.groupingBy(ProcViewCol::getColTypeCode));
-
         List<ProcViewCol> enumCols = collect.get(ProcViewColType.ENUM.getCode());
         if (enumCols != null) {
-            enumCols.forEach(enumCol -> handleEnumCol(mainForm, enumCol.getPropName(), enumCol.getEnumTypeCode()));
+            enumCols.forEach(enumCol -> {
+                if (enumCol.getEditable() != null && !enumCol.getEditable()) {
+                    handleEnumCol(mainForm, enumCol.getPropName(), enumCol.getEnumTypeCode());
+                }
+            });
         }
         List<ProcViewCol> eEnumCols = collect.get(ProcViewColType.E_ENUM.getCode());
         if (eEnumCols != null) {
-            eEnumCols.forEach(eEnumCol -> handleExEnumCol(mainForm, eEnumCol.getPropName(), eEnumCol.getEnumTypeCode()));
+            eEnumCols.forEach(eEnumCol -> {
+                if (eEnumCol.getEditable() != null && !eEnumCol.getEditable()) {
+                    handleExEnumCol(mainForm, eEnumCol.getPropName(), eEnumCol.getEnumTypeCode());
+                }
+            });
         }
 
         return mainForm;

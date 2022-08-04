@@ -92,7 +92,9 @@ public class ProcViewCol implements Serializable {
     @TableField("is_display")
     private Boolean display;
 
-
+    /**
+     * 是否移动设备显示
+     */
     @TableField("is_mobile_display")
     private Boolean mobileDisplay;
 
