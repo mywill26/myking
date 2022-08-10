@@ -20,4 +20,12 @@ public interface ProcFormViewService extends IService<ProcFormView> {
      * @return process form view
      */
     ProcFormView getByViewKey(String viewKey);
+
+    /**
+     * get view name by view key
+     *
+     * @param viewKey view key
+     * @return view name
+     */
+    String getViewNameByViewKey(String viewKey);
 }

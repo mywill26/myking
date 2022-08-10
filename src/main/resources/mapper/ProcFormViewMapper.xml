@@ -10,6 +10,7 @@
         <result column="is_combine" property="combine" />
         <result column="main_resolver" property="mainResolver" />
         <result column="sub_resolver" property="subResolver" />
+        <result column="combine_resolver" property="combineResolver" />
         <result column="creator_id" property="creatorId" />
         <result column="create_time" property="createTime" />
         <result column="modifier_id" property="modifierId" />
@@ -18,7 +19,7 @@
     </resultMap>
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, view_name, view_key, is_combine, main_resolver, sub_resolver,
+        id, view_name, view_key, is_combine, main_resolver, sub_resolver, combine_resolver,
         creator_id, create_time, modifier_id, modify_time, yn
     </sql>
 

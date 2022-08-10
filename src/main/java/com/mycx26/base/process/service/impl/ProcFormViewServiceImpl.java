@@ -7,9 +7,12 @@ import com.mycx26.base.process.constant.ProcCacheConstant;
 import com.mycx26.base.process.entity.ProcFormView;
 import com.mycx26.base.process.mapper.ProcFormViewMapper;
 import com.mycx26.base.process.service.ProcFormViewService;
+import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.StringUtil;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 /**
  * <p>
@@ -22,6 +25,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProcFormViewServiceImpl extends ServiceImpl<ProcFormViewMapper, ProcFormView> implements ProcFormViewService {
 
+    private ProcFormViewService procFormViewService;
+
+    @PostConstruct
+    private void init() {
+        procFormViewService = SpringUtil.getBean(ProcFormViewServiceImpl.class);
+    }
+
     @Cacheable(value = ProcCacheConstant.FORM_VIEW, key="#viewKey",
             condition = "#viewKey != null", unless = "null == #result")
     @Override
@@ -31,6 +41,18 @@ public class ProcFormViewServiceImpl extends ServiceImpl<ProcFormViewMapper, Pro
         }
 
         return getOne(Wrappers.<ProcFormView>lambdaQuery()
-                .eq(ProcFormView::getViewKey, viewKey).eq(ProcFormView::getYn, Yn.YES.getCode()));
+                .eq(ProcFormView::getViewKey, viewKey)
+                .eq(ProcFormView::getYn, Yn.YES.getCode())
+        );
+    }
+
+    @Override
+    public String getViewNameByViewKey(String viewKey) {
+        ProcFormView view = procFormViewService.getByViewKey(viewKey);
+        if (view != null) {
+            return view.getViewName();
+        }
+
+        return null;
     }
 }

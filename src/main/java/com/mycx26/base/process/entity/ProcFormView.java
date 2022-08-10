@@ -60,6 +60,11 @@ public class ProcFormView implements Serializable {
     private String subResolver;
 
     /**
+     * 组合视图解析器
+     */
+    private String combineResolver;
+
+    /**
      * 创建人id
      */
     private String creatorId;

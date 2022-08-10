@@ -1,6 +1,7 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mycx26.base.constant.SqlConstant;
 import com.mycx26.base.constant.Symbol;
@@ -29,6 +30,7 @@ import com.mycx26.base.process.service.ProcViewColService;
 import com.mycx26.base.process.service.ProcViewService;
 import com.mycx26.base.process.service.ToDoColService;
 import com.mycx26.base.process.service.bo.ApproveView;
+import com.mycx26.base.process.service.bo.CombineViewBo;
 import com.mycx26.base.process.service.bo.ProcTask;
 import com.mycx26.base.process.service.bo.ProcToDo;
 import com.mycx26.base.process.service.bo.ProcViewColBo;
@@ -38,6 +40,7 @@ import com.mycx26.base.process.service.bo.ToDoHeader;
 import com.mycx26.base.process.service.bo.ToDoQueryCol;
 import com.mycx26.base.process.service.query.ApproveViewQuery;
 import com.mycx26.base.process.service.query.TaskQuery;
+import com.mycx26.base.process.service.resolver.CombineViewResolver;
 import com.mycx26.base.process.service.resolver.ProcViewMainResolver;
 import com.mycx26.base.process.service.resolver.ProcViewSubResolver;
 import com.mycx26.base.service.EnumValueService;
@@ -391,6 +394,11 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {
+        // consider general view not config table column info
+        if (StringUtil.isBlank(mainCols.get(0).getTblName())) {
+            return Collections.emptyMap();
+        }
+
         Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put("pi.flow_no", flowNo);
         Map<String, Object> mainForm = jdbcService.selectMap2(mainCols.get(0).getTblName(),
@@ -507,38 +515,77 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private ApproveView addViewCol(ApproveView approveView) {
-        Map<String, List<ProcViewColBo>> collect = procViewColService.list(Wrappers.<ProcViewCol>lambdaQuery()
-                        .select(ProcViewCol::getFormTypeCode,
-                                ProcViewCol::getPropName,
-                                ProcViewCol::getColName,
-                                ProcViewCol::getColTypeCode,
-                                ProcViewCol::getEnumTypeCode,
-                                ProcViewCol::getDisplay,
-                                ProcViewCol::getMobileDisplay,
-                                ProcViewCol::getOrderNo,
-                                ProcViewCol::getEditable)
-                        .eq(ProcViewCol::getViewKey, approveView.getViewKey())
-                        .eq(ProcViewCol::getYn, Yn.YES.getCode())
-                        .orderByAsc(ProcViewCol::getOrderNo),
-                e -> new ProcViewColBo()
-                        .setFormTypeCode(e.getFormTypeCode())
-                        .setPropName(e.getPropName())
-                        .setColName(e.getColName())
-                        .setColTypeCode(e.getColTypeCode())
-                        .setEnumTypeCode(e.getEnumTypeCode())
-                        .setDisplay(e.getDisplay())
-                        .setMobileDisplay(e.getMobileDisplay())
-                        .setOrderNo(e.getOrderNo())
-                        .setEditable(e.getEditable())
-        ).stream().collect(Collectors.groupingBy(ProcViewColBo::getFormTypeCode));
-        if (collect.get(ProcFormType.MAIN.getCode()) != null) {
-            approveView.setMainViewCols(collect.get(ProcFormType.MAIN.getCode()));
-        }
-        if (collect.get(ProcFormType.SUB.getCode()) != null) {
-            approveView.setSubViewCols(collect.get(ProcFormType.SUB.getCode()));
+        ProcFormView procFormView = procFormViewService.getByViewKey(approveView.getViewKey());
+        // combine view
+        if (procFormView != null && procFormView.getCombine()) {
+            handleCombineViewCol(approveView);
+        } else {
+            Map<String, List<ProcViewColBo>> collect = procViewColService.list(Wrappers.<ProcViewCol>lambdaQuery()
+                            .select(ProcViewCol::getFormTypeCode,
+                                    ProcViewCol::getPropName,
+                                    ProcViewCol::getColName,
+                                    ProcViewCol::getColTypeCode,
+                                    ProcViewCol::getEnumTypeCode,
+                                    ProcViewCol::getDisplay,
+                                    ProcViewCol::getMobileDisplay,
+                                    ProcViewCol::getOrderNo,
+                                    ProcViewCol::getEditable)
+                            .eq(ProcViewCol::getViewKey, approveView.getViewKey())
+                            .eq(ProcViewCol::getYn, Yn.YES.getCode())
+                            .orderByAsc(ProcViewCol::getOrderNo),
+                    this::toProcViewColBo)
+                    .stream().collect(Collectors.groupingBy(ProcViewColBo::getFormTypeCode));
+            if (collect.get(ProcFormType.MAIN.getCode()) != null) {
+                approveView.setMainViewCols(collect.get(ProcFormType.MAIN.getCode()));
+            }
+            if (collect.get(ProcFormType.SUB.getCode()) != null) {
+                approveView.setSubViewCols(collect.get(ProcFormType.SUB.getCode()));
+            }
         }
 
         return approveView;
+    }
+
+    private void handleCombineViewCol(ApproveView approveView) {
+        List<CombineView> views = combineViewService.getByViewKey1(approveView.getViewKey());
+        ExpAssert.isFalse(CollectionUtil.isEmpty(views), "Combine view config error");
+
+        List<CombineViewBo> viewBos = Lists.newArrayListWithCapacity(views.size());
+        views.forEach(e -> {
+            CombineViewBo viewBo = new CombineViewBo()
+                    .setViewKey(e.getViewKey2())
+                    .setViewName(procFormViewService.getViewNameByViewKey(e.getViewKey2()))
+                    .setOrderNo(e.getOrderNo());
+            List<ProcViewColBo> colBos = procViewColService.getByViewKey(e.getViewKey2())
+                    .stream().map(this::toProcViewColBo).collect(Collectors.toList());
+            viewBo.setViewCols(colBos);
+
+            viewBos.add(viewBo);
+        });
+
+        approveView.setCombineViews(viewBos);
+
+        // resolve combine
+        ProcFormView formView = procFormViewService.getByViewKey(approveView.getViewKey());
+        if (StringUtil.isNotBlank(formView.getCombineResolver())) {
+            CombineViewResolver resolver = SpringUtil.getBean2(formView.getCombineResolver());
+            if (resolver != null) {
+                resolver.resolve(approveView);
+            }
+        }
+    }
+
+    private ProcViewColBo toProcViewColBo(ProcViewCol e) {
+        return new ProcViewColBo()
+                .setFormTypeCode(e.getFormTypeCode())
+                .setPropName(e.getPropName())
+                .setColName(e.getColName())
+                .setColTypeCode(e.getColTypeCode())
+                .setEnumTypeCode(e.getEnumTypeCode())
+                .setDisplay(e.getDisplay())
+                .setMobileDisplay(e.getMobileDisplay())
+                .setOrderNo(e.getOrderNo())
+                .setEditable(e.getEditable());
     }
 
     @Override

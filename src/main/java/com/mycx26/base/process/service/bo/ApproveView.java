@@ -39,6 +39,8 @@ public class ApproveView {
 
     private List<ProcViewColBo> subViewCols;
 
+    private List<CombineViewBo> combineViews;
+
     private long subTotal;
 
     private Boolean mobile;
