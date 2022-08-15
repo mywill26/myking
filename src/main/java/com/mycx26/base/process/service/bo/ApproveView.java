@@ -13,6 +13,8 @@ public class ApproveView {
 
     private String viewKey;
 
+    private String viewName;
+
     private String procInstId;
 
     private String procInstStatusCode;

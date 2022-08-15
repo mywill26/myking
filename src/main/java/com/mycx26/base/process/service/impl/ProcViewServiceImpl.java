@@ -303,6 +303,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         // combine view
         if (procFormView != null && procFormView.getCombine()) {
+            approveView.setViewName(procFormView.getViewName());
             handleCombineView(procInst, approveView);
         } else {
             Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(approveView.getViewKey())

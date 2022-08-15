@@ -22,4 +22,6 @@ public class ProcCacheConstant {
     public static final String NODE_CATEGORY = "node-cat";
 
     public static final String FORM_VIEW = "form-view";
+
+    public static final String COMBINE_VIEW = "cb-view";
 }
