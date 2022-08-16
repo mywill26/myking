@@ -559,6 +559,14 @@ public class ProcViewServiceImpl implements ProcViewService {
                     .setOrderNo(e.getOrderNo());
             List<ProcViewColBo> colBos = procViewColService.getByViewKey(e.getViewKey2())
                     .stream().map(this::toProcViewColBo).collect(Collectors.toList());
+            colBos.forEach(colBo -> {
+                boolean flag = colBo.getEditable()
+                        && (ProcViewColType.ENUM.getCode().equals(colBo.getColTypeCode())
+                        || ProcViewColType.E_ENUM.getCode().equals(colBo.getColTypeCode()));
+                if (flag) {
+                    handleEnumOptions(colBo);
+                }
+            });
             viewBo.setViewCols(colBos);
 
             viewBos.add(viewBo);
@@ -587,6 +595,18 @@ public class ProcViewServiceImpl implements ProcViewService {
                 .setMobileDisplay(e.getMobileDisplay())
                 .setOrderNo(e.getOrderNo())
                 .setEditable(e.getEditable());
+    }
+
+    private void handleEnumOptions(ProcViewColBo colBo) {
+        if (ProcViewColType.ENUM.getCode().equals(colBo.getColTypeCode())) {
+            colBo.setOptions(enumValueService.getOptionsByTypeCode(colBo.getEnumTypeCode()));
+        } else if (QueryColType.EXTERNAL_ENUM.getCode().equals(colBo.getColTypeCode())) {
+            if (null == eEnumMap.get(colBo.getEnumTypeCode())) {
+                eEnumMap.put(colBo.getEnumTypeCode(), SpringUtil.getBean(colBo.getEnumTypeCode()));
+            }
+            ExternalEnumService externalEnumService = eEnumMap.get(colBo.getEnumTypeCode());
+            colBo.setOptions(externalEnumService.getAllOptions());
+        }
     }
 
     @Override

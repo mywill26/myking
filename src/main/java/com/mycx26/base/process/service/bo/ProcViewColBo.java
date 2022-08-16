@@ -1,8 +1,10 @@
 package com.mycx26.base.process.service.bo;
 
+import com.mycx26.base.service.bo.SelectOption;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class ProcViewColBo implements Serializable {
@@ -24,4 +26,6 @@ public class ProcViewColBo implements Serializable {
     private Integer orderNo;
 
     private Boolean editable;
+
+    private List<SelectOption> options;
 }
