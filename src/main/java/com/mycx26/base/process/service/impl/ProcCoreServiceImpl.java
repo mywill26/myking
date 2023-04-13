@@ -234,9 +234,10 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         return sb;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void approve(ApproveWrapper approveWrapper) {
-        Map<String, Object> vars = procCoreService.doApprove(approveWrapper);
+        Map<String, Object> vars = doApprove(approveWrapper);
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -257,9 +258,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         });
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
+    private Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
         ProcNodeHandler handler = preHandle(approveWrapper);
         Map<String, Object> vars = Collections.emptyMap();
         if (handler != null) {
