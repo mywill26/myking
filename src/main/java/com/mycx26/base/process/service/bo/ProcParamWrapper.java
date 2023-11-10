@@ -2,6 +2,8 @@ package com.mycx26.base.process.service.bo;
 
 import com.mycx26.base.service.bo.ParamWrapper;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * Process **create** param wrapper.
  *
@@ -9,10 +11,14 @@ import com.mycx26.base.service.bo.ParamWrapper;
  */
 public class ProcParamWrapper extends ParamWrapper {
 
+    @NotBlank
     private String procDefKey;
+
+    private String procDefId;
 
     private String flowNo;      // only draft required
 
+    @NotBlank
     private String userId;
 
     private String procInstName;    // not required
@@ -25,6 +31,14 @@ public class ProcParamWrapper extends ParamWrapper {
 
     public void setProcDefKey(String procDefKey) {
         this.procDefKey = procDefKey;
+    }
+
+    public String getProcDefId() {
+        return procDefId;
+    }
+
+    public void setProcDefId(String procDefId) {
+        this.procDefId = procDefId;
     }
 
     public String getFlowNo() {

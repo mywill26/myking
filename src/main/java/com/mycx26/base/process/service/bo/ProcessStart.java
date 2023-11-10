@@ -12,6 +12,8 @@ public class ProcessStart {
 
     private String procDefKey;
 
+    private String procDefId;
+
     private String procInstId;
 
     private String businessKey;

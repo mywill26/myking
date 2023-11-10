@@ -193,6 +193,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
         ProcessStart start = new ProcessStart()
                 .setProcDefKey(procDef.getEngineKey())
+                .setProcDefId(procParamWrapper.getProcDefId())
                 .setName(procParamWrapper.getProcInstName())
                 .setCreatorId(procParamWrapper.getUserId())
                 .setBusinessKey(procParamWrapper.getFlowNo())
