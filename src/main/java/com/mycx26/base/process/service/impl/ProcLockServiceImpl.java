@@ -1,12 +1,12 @@
 package com.mycx26.base.process.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.base.AppException;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.entity.ProcLock;
 import com.mycx26.base.process.enump.InstanceStatus;
+import com.mycx26.base.process.exception.ProcLockException;
 import com.mycx26.base.process.mapper.ProcLockMapper;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcInstService;
@@ -73,7 +73,7 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
         try {
             procLockMapper.insertBatchSomeColumn(procLocks);
         } catch (DuplicateKeyException e) {
-            throw new DataException("Resource has bean locked");
+            throw new ProcLockException("Resource has bean locked");
         }
     }
 

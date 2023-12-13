@@ -90,11 +90,9 @@ public class ProcCoreController {
     }
 
     @PostMapping("create")
-    public Message<?> create(ProcParamWrapper procParamWrapper) {
+    public Message<String> create(ProcParamWrapper procParamWrapper) {
         procParamWrapper.setUserId(UserContext.getUserId());
-        procCoreService.create(procParamWrapper);
-
-        return Message.success();
+        return Message.success(procCoreService.create(procParamWrapper));
     }
 
     @PostMapping("cancel")

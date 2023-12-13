@@ -25,6 +25,8 @@ public class ProcParamWrapper extends ParamWrapper {
 
     private String procInstStatusCode;
 
+    private String sideCode;
+
     public String getProcDefKey() {
         return procDefKey;
     }
@@ -71,5 +73,13 @@ public class ProcParamWrapper extends ParamWrapper {
 
     public void setProcInstStatusCode(String procInstStatusCode) {
         this.procInstStatusCode = procInstStatusCode;
+    }
+
+    public String getSideCode() {
+        return sideCode;
+    }
+
+    public void setSideCode(String sideCode) {
+        this.sideCode = sideCode;
     }
 }

@@ -151,6 +151,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setProcInstName(procParamWrapper.getProcInstName())
                 .setProcDefKey(procDef.getProcDefKey())
                 .setStatusCode(procParamWrapper.getProcInstStatusCode())
+                .setSideCode(procParamWrapper.getSideCode())
                 .setCreatorId(procParamWrapper.getUserId());
         procInstService.add(procInst);
 

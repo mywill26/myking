@@ -10,10 +10,14 @@
         <result column="proc_def_key" property="procDefKey" />
         <result column="flow_no" property="flowNo" />
         <result column="status_code" property="statusCode" />
+        <result column="side_code" property="sideCode" />
         <result column="creator_id" property="creatorId" />
         <result column="creator" property="creator" />
         <result column="creator_email" property="creatorEmail" />
+        <result column="creator_dept_code" property="creatorDeptCode" />
         <result column="creator_dept" property="creatorDept" />
+        <result column="creator_city_code" property="creatorCityCode" />
+        <result column="creator_place_code" property="creatorPlaceCode" />
         <result column="create_time" property="createTime" />
         <result column="end_time" property="endTime" />
         <result column="modify_time" property="modifyTime" />
@@ -21,8 +25,9 @@
     </resultMap>
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, proc_inst_id, proc_inst_name, proc_def_key, flow_no, status_code,
-        creator_id, creator, creator_email, creator_dept, create_time, end_time, modify_time, yn
+        id, proc_inst_id, proc_inst_name, proc_def_key, flow_no, status_code, side_code,
+        creator_id, creator, creator_email, creator_dept_code, creator_dept,
+        creator_city_code, creator_place_code, create_time, end_time, modify_time, yn
     </sql>
 
 </mapper>

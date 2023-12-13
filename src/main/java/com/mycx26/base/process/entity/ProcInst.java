@@ -59,6 +59,11 @@ public class ProcInst implements Serializable {
     private String statusCode;
 
     /**
+     * 端code
+     */
+    private String sideCode;
+
+    /**
      * 创建人id
      */
     private String creatorId;
@@ -84,6 +89,16 @@ public class ProcInst implements Serializable {
     private String creatorDept;
 
     /**
+     * 创建人城市code
+     */
+    private String creatorCityCode;
+
+    /**
+     * 创建人职场code
+     */
+    private String creatorPlaceCode;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
@@ -106,4 +121,13 @@ public class ProcInst implements Serializable {
     // enums
     @TableField(exist = false)
     private String procInstStatus;
+
+    @TableField(exist = false)
+    private String side;
+
+    @TableField(exist = false)
+    private String creatorCity;
+
+    @TableField(exist = false)
+    private String creatorPlace;
 }

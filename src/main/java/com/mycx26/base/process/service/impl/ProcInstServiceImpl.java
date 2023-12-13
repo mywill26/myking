@@ -95,18 +95,16 @@ public class ProcInstServiceImpl extends ServiceImpl<ProcInstMapper, ProcInst> i
             StringUtil.append(sb, "Status code is required");
         }
 
-        if (StringUtil.isBlank(procInst.getCreatorId())) {
-            StringUtil.append(sb, "Creator id is required");
+        ContextUser user = externalUserService.getByUserId(procInst.getCreatorId());
+        if (null == user) {
+            StringUtil.append(sb, "Creator id invalid");
         } else {
-            ContextUser user = externalUserService.getByUserId(procInst.getCreatorId());
-            if (null == user) {
-                StringUtil.append(sb, "Creator id invalid");
-            } else {
-                procInst.setCreator(user.getUsername())
-                        .setCreatorEmail(user.getEmail())
-                        .setCreatorDeptCode(user.getDeptCode())
-                        .setCreatorDept(user.getDeptFullName());
-            }
+            procInst.setCreator(user.getUsername())
+                    .setCreatorEmail(user.getEmail())
+                    .setCreatorDeptCode(user.getDeptCode())
+                    .setCreatorDept(user.getDeptFullName())
+                    .setCreatorCityCode(user.getBaseCityCode())
+                    .setCreatorPlaceCode(user.getBasePlaceCode());
         }
 
         if (sb.length() > 0) {
