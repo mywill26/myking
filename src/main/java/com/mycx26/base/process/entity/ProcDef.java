@@ -87,6 +87,12 @@ public class ProcDef implements Serializable {
     private Boolean cancel;
 
     /**
+     * 是否启用轻量视图
+     */
+    @TableField("is_light_view")
+    private Boolean lightView;
+
+    /**
      * 描述
      */
     private String description;

@@ -20,6 +20,7 @@ import com.mycx26.base.process.entity.ToDoCol;
 import com.mycx26.base.process.enump.ProcFormType;
 import com.mycx26.base.process.enump.ProcViewColType;
 import com.mycx26.base.process.service.CombineViewService;
+import com.mycx26.base.process.service.ProcBaseService;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcEngineService;
 import com.mycx26.base.process.service.ProcExtendedService;
@@ -41,6 +42,7 @@ import com.mycx26.base.process.service.bo.ToDoQueryCol;
 import com.mycx26.base.process.service.query.ApproveViewQuery;
 import com.mycx26.base.process.service.query.TaskQuery;
 import com.mycx26.base.process.service.resolver.CombineViewResolver;
+import com.mycx26.base.process.service.resolver.LightViewResolver;
 import com.mycx26.base.process.service.resolver.ProcViewMainResolver;
 import com.mycx26.base.process.service.resolver.ProcViewSubResolver;
 import com.mycx26.base.service.EnumValueService;
@@ -277,7 +279,8 @@ public class ProcViewServiceImpl implements ProcViewService {
         }
 
         ProcInst procInst = procInstService.getByProcInstId(approveViewQuery.getProcInstId());
-        ProcNode procNode = procNodeService.getByProcDefKeyAndNodeKey(procInst.getProcDefKey(), approveViewQuery.getNodeKey());
+        ProcNode procNode = procNodeService
+                .getByProcDefKeyAndNodeKey(procInst.getProcDefKey(), approveViewQuery.getNodeKey());
 
         ApproveView approveView = new ApproveView().setViewKey(procNode.getViewKey())
                 .setProcInstId(approveViewQuery.getProcInstId())
@@ -292,13 +295,21 @@ public class ProcViewServiceImpl implements ProcViewService {
         approveView.setRejectFirst(procNode.getRejectFirst());
         approveView.setReassign(procNode.getReassign());
 
-        // handle process log
-        approveView.setLogs(procEngineService.getProcLogs(approveViewQuery.getProcInstId()));
+        if (procDef.getLightView()) {
+            ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
+            if (service instanceof LightViewResolver) {
+                ((LightViewResolver)service).resolve(approveView);
+            }
+        } else {
+            // handle process log
+            approveView.setLogs(procEngineService.getProcLogs(approveViewQuery.getProcInstId()));
+            handleParamWrapper(procInst, approveView);
+        }
 
-        return handleParamWrapper(procInst, approveView);
+        return approveView;
     }
 
-    private ApproveView handleParamWrapper(ProcInst procInst, ApproveView approveView) {
+    private void handleParamWrapper(ProcInst procInst, ApproveView approveView) {
         ProcFormView procFormView = procFormViewService.getByViewKey(approveView.getViewKey());
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         // combine view
@@ -322,8 +333,6 @@ public class ProcViewServiceImpl implements ProcViewService {
         if (procFormView != null) {
             postResolve(procFormView, procDef, approveView);
         }
-
-        return approveView;
     }
 
     private void handleCombineView(ProcInst procInst, ApproveView approveView) {
@@ -365,9 +374,6 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private ProcInst getDetailViewValidate(String procInstId) {
-        if (StringUtil.isBlank(procInstId)) {
-            return null;
-        }
         ProcInst procInst = procInstService.getByProcInstId(procInstId);
         if (null == procInst) {
             throw new DataException("Process instance not exist");
@@ -384,14 +390,23 @@ public class ProcViewServiceImpl implements ProcViewService {
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
 
-        // handle first node tips
+        // set first node's tips
         ProcNode first = procNodeService.getFirst(procDef.getProcDefKey());
         approveView.setNodeTips(first.getTips());
-        approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
 
         approveView.setCancel(procExtendedService.isCancel(procInst));
 
-        return handleParamWrapper(procInst, approveView);
+        if (procDef.getLightView()) {
+            ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
+            if (service instanceof LightViewResolver) {
+                ((LightViewResolver)service).resolve(approveView);
+            }
+        } else {
+            approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
+            handleParamWrapper(procInst, approveView);
+        }
+
+        return approveView;
     }
 
     private Map<String, Object> handleMainForm(List<ProcViewCol> mainCols, String flowNo) {
