@@ -1,5 +1,6 @@
 package com.mycx26.base.process.service;
 
+import com.google.common.collect.Maps;
 import com.mycx26.base.process.constant.ProcConstant;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
@@ -9,7 +10,6 @@ import com.mycx26.base.util.SqlUtil;
 import com.mycx26.base.util.StringUtil;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -105,7 +105,7 @@ public abstract class ProcNodeHandler {
     // ==============================================================>
 
     protected Map<String, Object> getMainFormByFlowNo(ApproveWrapper approveWrapper) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), approveWrapper.getFlowNo());
 
         return procFormService.getMainForm(approveWrapper.getProcDef().getMainForm(), clauses);
@@ -116,7 +116,7 @@ public abstract class ProcNodeHandler {
     }
 
     protected List<Map<String, Object>> getSubItemsByFlowNo(ApproveWrapper approveWrapper, Map<String, Object> adds) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), approveWrapper.getFlowNo());
 
         if (!CollectionUtil.isEmpty(adds)) {
@@ -127,7 +127,7 @@ public abstract class ProcNodeHandler {
     }
 
     protected Map<String, Object> getMainFormByProcInstId(ApproveWrapper approveWrapper) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), approveWrapper.getProcInstId());
 
         return procFormService.getMainForm(approveWrapper.getProcDef().getMainForm(), clauses);
@@ -138,7 +138,7 @@ public abstract class ProcNodeHandler {
     }
 
     protected List<Map<String, Object>> getSubItemsByProcInstId(ApproveWrapper approveWrapper, Map<String, Object> adds) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), approveWrapper.getProcInstId());
 
         if (!CollectionUtil.isEmpty(adds)) {

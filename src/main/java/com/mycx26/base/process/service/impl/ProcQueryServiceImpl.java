@@ -1,5 +1,6 @@
 package com.mycx26.base.process.service.impl;
 
+import com.google.common.collect.Maps;
 import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.ParamException;
 import com.mycx26.base.process.constant.ProcConstant;
@@ -18,7 +19,6 @@ import com.mycx26.base.util.StringUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +115,7 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     @Override
     public Map<String, Object> getMainFormByFlowNo(String procDefKey, String flowNo) {
         ProcDef procDef = getProcDefByDefKey(procDefKey);
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
 
         return procFormService.getMainForm(procDef.getMainForm(), clauses);
@@ -136,7 +136,7 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     public List<Map<String, Object>> getSubItemsByFlowNo(String procDefKey, String flowNo, Map<String, Object> adds) {
         ProcDef procDef = getProcDefByDefKey(procDefKey);
 
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
 
         if (!CollectionUtil.isEmpty(adds)) {
@@ -155,7 +155,7 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     @Override
     public Map<String, Object> getMainFormByProcInstId(String procDefKey, String procInstId) {
         ProcDef procDef = getProcDefByDefKey(procDefKey);
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId);
 
         return procFormService.getMainForm(procDef.getMainForm(), clauses);
@@ -176,7 +176,7 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     public List<Map<String, Object>> getSubItemsByProcInstId(String procDefKey, String procInstId, Map<String, Object> adds) {
         ProcDef procDef = getProcDefByDefKey(procDefKey);
 
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId);
 
         if (!CollectionUtil.isEmpty(adds)) {

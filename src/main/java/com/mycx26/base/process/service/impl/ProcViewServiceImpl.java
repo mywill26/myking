@@ -445,7 +445,7 @@ public class ProcViewServiceImpl implements ProcViewService {
     }
 
     private List<Map<String, Object>> handleSubForm(List<ProcViewCol> subCols, String flowNo) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
         List<Map<String, Object>> subItems = jdbcService.selectList2(subCols.get(0).getTblName(),
                 subCols.stream().map(ProcViewCol::getColCode).collect(Collectors.toList()),

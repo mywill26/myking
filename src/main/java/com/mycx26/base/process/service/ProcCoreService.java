@@ -4,6 +4,8 @@ import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import com.mycx26.base.process.service.bo.ReassignWrapper;
 
+import java.util.Map;
+
 /**
  * Process flow core service to join & dispatch.
  *
@@ -35,6 +37,15 @@ public interface ProcCoreService {
      * @param approveWrapper approve wrapper
      */
     void approve(ApproveWrapper approveWrapper);
+
+    /**
+     * process approve core handle
+     * Invoke directly is not recommended, use {@link #approve(ApproveWrapper)} instead.
+     *
+     * @param approveWrapper approve wrapper
+     * @return process variables map
+     */
+    Map<String, Object> doApprove(ApproveWrapper approveWrapper);
 
     /**
      * reject process to previous nodes

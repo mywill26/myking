@@ -7,6 +7,7 @@ import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.entity.ProcLock;
 import com.mycx26.base.process.entity.ProcNode;
 import com.mycx26.base.process.enump.InstanceStatus;
+import com.mycx26.base.process.exception.TaskNotExistException;
 import com.mycx26.base.process.service.ProcBaseService;
 import com.mycx26.base.process.service.ProcCoreService;
 import com.mycx26.base.process.service.ProcDefService;
@@ -20,6 +21,7 @@ import com.mycx26.base.process.service.ProcNodeHandler;
 import com.mycx26.base.process.service.ProcNodeService;
 import com.mycx26.base.process.service.bo.ApproveWrapper;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
+import com.mycx26.base.process.service.bo.ProcTask;
 import com.mycx26.base.process.service.bo.ProcessAction;
 import com.mycx26.base.process.service.bo.ProcessCancel;
 import com.mycx26.base.process.service.bo.ProcessStart;
@@ -39,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -236,10 +239,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         return sb;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void approve(ApproveWrapper approveWrapper) {
-        Map<String, Object> vars = doApprove(approveWrapper);
+        Map<String, Object> vars = procCoreService.doApprove(approveWrapper);
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -260,7 +262,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         });
     }
 
-    private Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
         ProcNodeHandler handler = preHandle(approveWrapper);
         Map<String, Object> vars = Collections.emptyMap();
         if (handler != null) {
@@ -337,22 +341,17 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     }
 
     private ProcInst approveValidate(ApproveWrapper approveWrapper) {
-        StringBuilder sb = new StringBuilder();
         ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());     // which form
-        if (null == procInst) {
-            throw new DataException("Process instance not exist");
-        }
-        if (StringUtil.isBlank(approveWrapper.getTaskId())) {   // which task
-            StringUtil.append(sb, "Task id is required");
-        }
-        if (StringUtil.isBlank(approveWrapper.getUserId())) {   // who
-            StringUtil.append(sb, "User id is required");
+        ExpAssert.isFalse(null == procInst, "Process instance not exist");
+
+        ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getTaskId()), "Task id is required");   // which task
+        List<ProcTask> tasks = procEngineService.getRunningTasks(approveWrapper.getProcInstId());
+        boolean flag = tasks.stream().anyMatch(e -> e.getCurTaskId().equals(approveWrapper.getTaskId()));
+        if (!flag) {
+            throw new TaskNotExistException("Task not exist");
         }
 
-        if (sb.length() > 0) {
-            sb.delete(sb.length() - 1, sb.length());
-            throw new ParamException(sb.toString());
-        }
+        ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getUserId()), "User id is required");   // who
 
         return procInst;
     }

@@ -1,5 +1,6 @@
 package com.mycx26.base.process.service.impl;
 
+import com.google.common.collect.Maps;
 import com.mycx26.base.process.constant.ProcConstant;
 import com.mycx26.base.process.service.ProcUpdateService;
 import com.mycx26.base.service.JdbcService;
@@ -7,7 +8,6 @@ import com.mycx26.base.util.SqlUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,7 +22,7 @@ public class ProcUpdateServiceImpl implements ProcUpdateService {
 
     @Override
     public void updateByFlowNo(String flowNo, String tblName, Map<String, Object> updates) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.FLOW_NO), flowNo);
 
         jdbcService.update(tblName, updates, clauses);
@@ -30,7 +30,7 @@ public class ProcUpdateServiceImpl implements ProcUpdateService {
 
     @Override
     public void updateById(Long id, String tblName, Map<String, Object> updates) {
-        Map<String, Object> clauses = new HashMap<>(1);
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.ID), id);
 
         jdbcService.update(tblName, updates, clauses);
