@@ -41,7 +41,6 @@ public class EngineNoticeServiceImpl implements EngineNoticeService {
         ProcInst procInst = procQueryService.getProcInstByInstId(procInstId);
         ExpAssert.isFalse(null == procInst, "Process instance not exist");
 
-        assert procInst != null;
         ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
         ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
         if (null == service) {

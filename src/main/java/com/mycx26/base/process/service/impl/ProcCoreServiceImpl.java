@@ -29,6 +29,7 @@ import com.mycx26.base.process.service.bo.ReassignWrapper;
 import com.mycx26.base.process.service.bo.TaskReassign;
 import com.mycx26.base.process.service.handler.ProcCreatePreHandler;
 import com.mycx26.base.service.ExternalUserService;
+import com.mycx26.base.service.transaction.TransactionWrapper;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.ExpAssert;
 import com.mycx26.base.util.SpringUtil;
@@ -38,7 +39,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
@@ -86,12 +86,8 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private ProcCoreService procCoreService;
-
-    @PostConstruct
-    private void init() {
-        procCoreService = SpringUtil.getBean(ProcCoreServiceImpl.class);
-    }
+    @Resource
+    private TransactionWrapper transactionWrapper;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -241,7 +237,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     @Override
     public void approve(ApproveWrapper approveWrapper) {
-        Map<String, Object> vars = procCoreService.doApprove(approveWrapper);
+        Map<String, Object> vars = transactionWrapper.wrapGet(() -> doApprove(approveWrapper));
 
         ProcessAction processAction = new ProcessAction()
                 .setProcInstId(approveWrapper.getProcInstId())
@@ -262,9 +258,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         });
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
+    private Map<String, Object> doApprove(ApproveWrapper approveWrapper) {
         ProcNodeHandler handler = preHandle(approveWrapper);
         Map<String, Object> vars = Collections.emptyMap();
         if (handler != null) {
@@ -390,7 +384,6 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
         ExpAssert.isFalse(null == procInst, "Process instance not exist");
         ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getUserId()), "User id is required");
-        assert procInst != null;
         ExpAssert.isTrue(approveWrapper.getUserId().equals(procInst.getCreatorId()), "Only creator can cancel");
 
         return procInst;

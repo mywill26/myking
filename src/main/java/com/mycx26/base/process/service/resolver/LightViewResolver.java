@@ -13,5 +13,5 @@ public interface LightViewResolver {
      *
      * @param approveView approve view wrapper
      */
-    void resolve(ApproveView approveView);
+    void resolveLightView(ApproveView approveView);
 }

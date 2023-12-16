@@ -298,7 +298,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         if (procDef.getLightView()) {
             ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
             if (service instanceof LightViewResolver) {
-                ((LightViewResolver)service).resolve(approveView);
+                ((LightViewResolver)service).resolveLightView(approveView);
             }
         } else {
             // handle process log
@@ -399,7 +399,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         if (procDef.getLightView()) {
             ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
             if (service instanceof LightViewResolver) {
-                ((LightViewResolver)service).resolve(approveView);
+                ((LightViewResolver)service).resolveLightView(approveView);
             }
         } else {
             approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
