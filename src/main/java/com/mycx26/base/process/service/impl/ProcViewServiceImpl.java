@@ -384,8 +384,9 @@ public class ProcViewServiceImpl implements ProcViewService {
 
     private ApproveView doGetDetailView(ProcInst procInst) {
         assert procInst != null;
-        ApproveView approveView = new ApproveView().setProcInstId(procInst.getProcInstId())
-                .setProcInstStatusCode(procInst.getStatusCode()).setProcDefKey(procInst.getProcDefKey());
+        ApproveView approveView = new ApproveView().setProcDefKey(procInst.getProcDefKey())
+                .setProcInstId(procInst.getProcInstId())
+                .setProcInstStatusCode(procInst.getStatusCode());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         approveView.setViewKey(procDef.getDetailViewKey()).setProcDesc(procDef.getDescription());
@@ -510,8 +511,13 @@ public class ProcViewServiceImpl implements ProcViewService {
             return null;
         }
 
-        handleProcLog(approveView);
-        return addViewCol(approveView);
+        ProcDef procDef = procDefService.getByKey(approveView.getProcDefKey());
+        if (!procDef.getLightView()) {
+            handleProcLog(approveView);
+            addViewCol(approveView);
+        }
+
+        return approveView;
     }
 
     private void handleProcLog(ApproveView approveView) {
@@ -530,7 +536,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         }
     }
 
-    private ApproveView addViewCol(ApproveView approveView) {
+    private void addViewCol(ApproveView approveView) {
         ProcFormView procFormView = procFormViewService.getByViewKey(approveView.getViewKey());
         // combine view
         if (procFormView != null && procFormView.getCombine()) {
@@ -558,8 +564,6 @@ public class ProcViewServiceImpl implements ProcViewService {
                 approveView.setSubViewCols(collect.get(ProcFormType.SUB.getCode()));
             }
         }
-
-        return approveView;
     }
 
     private void handleCombineViewCol(ApproveView approveView) {
@@ -631,7 +635,12 @@ public class ProcViewServiceImpl implements ProcViewService {
             return null;
         }
 
-        handleProcLog(approveView);
-        return addViewCol(approveView);
+        ProcDef procDef = procDefService.getByKey(approveView.getProcDefKey());
+        if (!procDef.getLightView()) {
+            handleProcLog(approveView);
+            addViewCol(approveView);
+        }
+
+        return approveView;
     }
 }
