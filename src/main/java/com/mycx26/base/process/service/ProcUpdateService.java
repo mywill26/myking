@@ -18,6 +18,15 @@ public interface ProcUpdateService {
     void updateByFlowNo(String flowNo, String tblName, Map<String, Object> updates);
 
     /**
+     * update process form by process instance id
+     *
+     * @param procInstId process instance id
+     * @param tblName table name
+     * @param updates updates
+     */
+    void updateByProcInstId(String procInstId, String tblName, Map<String, Object> updates);
+
+    /**
      * update process form by id
      *
      * @param id id

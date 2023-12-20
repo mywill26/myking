@@ -29,6 +29,14 @@ public class ProcUpdateServiceImpl implements ProcUpdateService {
     }
 
     @Override
+    public void updateByProcInstId(String procInstId, String tblName, Map<String, Object> updates) {
+        Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
+        clauses.put(SqlUtil.camelToUnderline(ProcConstant.PROC_INST_ID), procInstId);
+
+        jdbcService.update(tblName, updates, clauses);
+    }
+
+    @Override
     public void updateById(Long id, String tblName, Map<String, Object> updates) {
         Map<String, Object> clauses = Maps.newHashMapWithExpectedSize(1);
         clauses.put(SqlUtil.camelToUnderline(ProcConstant.ID), id);
