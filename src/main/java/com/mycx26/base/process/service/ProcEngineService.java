@@ -1,12 +1,13 @@
 package com.mycx26.base.process.service;
 
+import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.entity.ProcNode;
 import com.mycx26.base.process.service.bo.ProcTask;
 import com.mycx26.base.process.service.bo.ProcessAction;
 import com.mycx26.base.process.service.bo.ProcessCancel;
 import com.mycx26.base.process.service.bo.ProcessLog;
-import com.mycx26.base.process.service.bo.TaskReassign;
 import com.mycx26.base.process.service.bo.ProcessStart;
+import com.mycx26.base.process.service.bo.TaskReassign;
 import com.mycx26.base.process.service.bo.ToDoHeader;
 import com.mycx26.base.process.service.query.Prophet;
 import com.mycx26.base.process.service.query.TaskQuery;
@@ -134,4 +135,12 @@ public interface ProcEngineService {
      * @param taskReassign task reassign
      */
     void reassign(TaskReassign taskReassign);
+
+    /**
+     * get process instance
+     *
+     * @param procInstId process instance id
+     * @return process instance
+     */
+    ProcInst getProcInst(String procInstId);
 }
