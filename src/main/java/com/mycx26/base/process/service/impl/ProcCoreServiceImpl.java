@@ -1,5 +1,6 @@
 package com.mycx26.base.process.service.impl;
 
+import com.mycx26.base.enump.Side;
 import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.ParamException;
 import com.mycx26.base.process.entity.ProcDef;
@@ -144,6 +145,9 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     private ProcInst addProcInst(ProcParamWrapper procParamWrapper, ProcDef procDef) {
         if (StringUtil.isBlank(procParamWrapper.getProcInstStatusCode())) {
             procParamWrapper.setProcInstStatusCode(InstanceStatus.RUN.getCode());
+        }
+        if (StringUtil.isBlank(procParamWrapper.getSideCode())) {
+            procParamWrapper.setSideCode(Side.WEB.getCode());
         }
 
         ProcInst procInst = new ProcInst().setFlowNo(procParamWrapper.getFlowNo())
