@@ -3,6 +3,7 @@ package com.mycx26.base.process.service.bo;
 import com.mycx26.base.service.bo.ParamWrapper;
 
 import javax.validation.constraints.NotBlank;
+import java.util.Map;
 
 /**
  * Process **create** param wrapper.
@@ -26,6 +27,8 @@ public class ProcParamWrapper extends ParamWrapper {
     private String procInstStatusCode;
 
     private String sideCode;
+
+    private Map<String, Object> vars;
 
     public String getProcDefKey() {
         return procDefKey;
@@ -81,5 +84,13 @@ public class ProcParamWrapper extends ParamWrapper {
 
     public void setSideCode(String sideCode) {
         this.sideCode = sideCode;
+    }
+
+    public Map<String, Object> getVars() {
+        return vars;
+    }
+
+    public void setVars(Map<String, Object> vars) {
+        this.vars = vars;
     }
 }

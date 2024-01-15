@@ -189,7 +189,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             service = procBaseService;
         }
         Map<String, Object> vars = service.setStartVar(procParamWrapper);
-
+        procParamWrapper.setVars(vars);
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
         ProcessStart start = new ProcessStart()
                 .setProcDefKey(procDef.getEngineKey())
@@ -198,10 +198,11 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setCreatorId(procParamWrapper.getUserId())
                 .setBusinessKey(procParamWrapper.getFlowNo())
                 .setVars(vars);
-
         String procInstId = procEngineService.startProcess(start);
+
         ProcBaseService finalService = service;
         threadPoolTaskExecutor.execute(() -> finalService.afterCreate(procParamWrapper));
+
         return procInstId;
     }
 
