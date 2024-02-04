@@ -40,6 +40,7 @@ import com.mycx26.base.process.service.bo.ToDoColBo;
 import com.mycx26.base.process.service.bo.ToDoHeader;
 import com.mycx26.base.process.service.bo.ToDoQueryCol;
 import com.mycx26.base.process.service.query.ApproveViewQuery;
+import com.mycx26.base.process.service.query.ProcViewQuery;
 import com.mycx26.base.process.service.query.TaskQuery;
 import com.mycx26.base.process.service.resolver.CombineViewResolver;
 import com.mycx26.base.process.service.resolver.LightViewResolver;
@@ -284,6 +285,7 @@ public class ProcViewServiceImpl implements ProcViewService {
 
         ApproveView approveView = new ApproveView().setViewKey(procNode.getViewKey())
                 .setProcInstId(approveViewQuery.getProcInstId())
+                .setFlowNo(procInst.getFlowNo())
                 .setProcInstStatusCode(procInst.getStatusCode())
                 .setProcDefKey(procInst.getProcDefKey());
 
@@ -303,31 +305,24 @@ public class ProcViewServiceImpl implements ProcViewService {
         } else {
             // handle process log
             approveView.setLogs(procEngineService.getProcLogs(approveViewQuery.getProcInstId()));
-            handleParamWrapper(procInst, approveView);
+            handleParamWrapper(approveView);
         }
 
         return approveView;
     }
 
-    private void handleParamWrapper(ProcInst procInst, ApproveView approveView) {
+    private void handleParamWrapper(ApproveView approveView) {
         ProcFormView procFormView = procFormViewService.getByViewKey(approveView.getViewKey());
-        ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
+        ProcDef procDef = procDefService.getByKey(approveView.getProcDefKey());
         // combine view
         if (procFormView != null && procFormView.getCombine()) {
             approveView.setViewName(procFormView.getViewName());
-            handleCombineView(procInst, approveView);
+            handleCombineView(approveView);
         } else {
-            Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(approveView.getViewKey())
-                    .stream().collect(Collectors.groupingBy(ProcViewCol::getFormTypeCode));
-            ExpAssert.isFalse(collect.isEmpty(), "View config error");
-
-            ParamWrapper paramWrapper = new ParamWrapper();
-            paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), procInst.getFlowNo()));
-            if (StringUtil.isNotBlank(procDef.getSubForm())) {
-                paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), procInst.getFlowNo()));
-            }
-
-            approveView.setParamWrapper(paramWrapper);
+            ProcViewQuery query = new ProcViewQuery().setProcDefKey(approveView.getProcDefKey())
+                    .setFlowNo(approveView.getFlowNo())
+                    .setViewKey(approveView.getViewKey());
+            approveView.setParamWrapper(getProcView(query));
         }
 
         if (procFormView != null) {
@@ -335,14 +330,14 @@ public class ProcViewServiceImpl implements ProcViewService {
         }
     }
 
-    private void handleCombineView(ProcInst procInst, ApproveView approveView) {
+    private void handleCombineView(ApproveView approveView) {
         List<CombineView> views = combineViewService.getByViewKey1(approveView.getViewKey());
         ExpAssert.isFalse(CollectionUtil.isEmpty(views), "Combine view config error");
         ParamWrapper wrapper = new ParamWrapper();
         wrapper.setMainForm(new LinkedHashMap<>());
         views.forEach(e -> {
             List<ProcViewCol> cols = procViewColService.getByViewKey(e.getViewKey2());
-            wrapper.getMainForm().putAll(handleMainForm(cols, procInst.getFlowNo()));
+            wrapper.getMainForm().putAll(handleMainForm(cols, approveView.getFlowNo()));
         });
 
         approveView.setParamWrapper(wrapper);
@@ -386,6 +381,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         assert procInst != null;
         ApproveView approveView = new ApproveView().setProcDefKey(procInst.getProcDefKey())
                 .setProcInstId(procInst.getProcInstId())
+                .setFlowNo(procInst.getFlowNo())
                 .setProcInstStatusCode(procInst.getStatusCode());
 
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
@@ -404,7 +400,7 @@ public class ProcViewServiceImpl implements ProcViewService {
             }
         } else {
             approveView.setLogs(procEngineService.getProcLogs(procInst.getProcInstId()));
-            handleParamWrapper(procInst, approveView);
+            handleParamWrapper(approveView);
         }
 
         return approveView;
@@ -642,5 +638,25 @@ public class ProcViewServiceImpl implements ProcViewService {
         }
 
         return approveView;
+    }
+
+    @Override
+    public ParamWrapper getProcView(ProcViewQuery query) {
+        if (StringUtil.isAnyBlank(query.getProcDefKey(), query.getFlowNo(), query.getViewKey())) {
+            return null;
+        }
+        ProcDef procDef = procDefService.getByKey(query.getProcDefKey());
+
+        Map<String, List<ProcViewCol>> collect = procViewColService.getByViewKey(query.getViewKey())
+                .stream().collect(Collectors.groupingBy(ProcViewCol::getFormTypeCode));
+        ExpAssert.isFalse(collect.isEmpty(), "View config error");
+
+        ParamWrapper paramWrapper = new ParamWrapper();
+        paramWrapper.setMainForm(handleMainForm(collect.get(ProcFormType.MAIN.getCode()), query.getFlowNo()));
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            paramWrapper.setSubItems(handleSubForm(collect.get(ProcFormType.SUB.getCode()), query.getFlowNo()));
+        }
+
+        return paramWrapper;
     }
 }

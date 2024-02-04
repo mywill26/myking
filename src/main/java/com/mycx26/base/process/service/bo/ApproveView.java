@@ -17,6 +17,8 @@ public class ApproveView {
 
     private String procInstId;
 
+    private String flowNo;
+
     private String procInstStatusCode;
 
     private String procDesc;

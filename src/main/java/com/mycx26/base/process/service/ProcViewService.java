@@ -5,7 +5,9 @@ import com.mycx26.base.process.service.bo.ProcToDo;
 import com.mycx26.base.process.service.bo.ToDoHeader;
 import com.mycx26.base.process.service.bo.ToDoQueryCol;
 import com.mycx26.base.process.service.query.ApproveViewQuery;
+import com.mycx26.base.process.service.query.ProcViewQuery;
 import com.mycx26.base.process.service.query.TaskQuery;
+import com.mycx26.base.service.bo.ParamWrapper;
 
 import java.util.List;
 
@@ -80,4 +82,12 @@ public interface ProcViewService {
      * @return detail view
      */
     ApproveView getDetailViewWithViewCol(String procInstId);
+
+    /**
+     * get process view data
+     *
+     * @param procViewQuery process view query
+     * @return process view data
+     */
+    ParamWrapper getProcView(ProcViewQuery procViewQuery);
 }
