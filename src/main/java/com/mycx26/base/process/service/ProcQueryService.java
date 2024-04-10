@@ -209,5 +209,5 @@ public interface ProcQueryService {
      * @param flowNo flow no
      * @return full wrapper
      */
-    FullWrapper buildFullFlowNo(String flowNo);
+    FullWrapper buildFullByFlowNo(String flowNo);
 }

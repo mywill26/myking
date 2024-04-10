@@ -90,7 +90,6 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Resource
     private TransactionWrapper transactionWrapper;
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public String create(ProcParamWrapper procParamWrapper) {
         createBaseValidate(procParamWrapper);
@@ -100,24 +99,18 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         handleSubject(procParamWrapper, procDef);
 
         // create pre-handle
-        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
-        if (procBaseService instanceof ProcCreatePreHandler) {
-            ((ProcCreatePreHandler)procBaseService).createPreHandle(procParamWrapper);
-        }
-        // add process instance
-        ProcInst procInst = addProcInst(procParamWrapper, procDef);
-        // handle main form
-        if (StringUtil.isNotBlank(procDef.getMainForm())) {
-            procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);
-        }
-        // handle sub form, if sub form configured, suit for simple process
-        if (StringUtil.isNotBlank(procDef.getSubForm())) {
-            procFormService.addSubForm(procDef.getSubForm(), procParamWrapper);
-            createResourceLock(procParamWrapper, procDef);
+        ProcBaseService service = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (service instanceof ProcCreatePreHandler) {
+            ((ProcCreatePreHandler)service).createPreHandle(procParamWrapper);
         }
 
-        // last, interaction with pe
-        return handleProcEngine(procParamWrapper, procInst);
+        String procInstId = transactionWrapper.wrapGet(() -> doCreate(procParamWrapper));
+
+        if (InstanceStatus.RUN.getCode().equals(procParamWrapper.getProcInstStatusCode())) {
+            threadPoolTaskExecutor.execute(() -> service.afterCreate(procParamWrapper));
+        }
+
+        return procInstId;
     }
 
     private void createBaseValidate(ProcParamWrapper procParamWrapper) {
@@ -140,6 +133,24 @@ public class ProcCoreServiceImpl implements ProcCoreService {
             String username = externalUserService.getNameByUserId(procParamWrapper.getUserId());
             procParamWrapper.setProcInstName(username + "的" + procDef.getProcDefName() + "申请");
         }
+    }
+
+    private String doCreate(ProcParamWrapper procParamWrapper) {
+        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
+        // add process instance
+        ProcInst procInst = addProcInst(procParamWrapper, procDef);
+        // handle main form
+        if (StringUtil.isNotBlank(procDef.getMainForm())) {
+            procFormService.addMainForm(procDef.getMainForm(), procParamWrapper);
+        }
+        // handle sub form, if sub form configured, suit for simple process
+        if (StringUtil.isNotBlank(procDef.getSubForm())) {
+            procFormService.addSubForm(procDef.getSubForm(), procParamWrapper);
+            createResourceLock(procParamWrapper, procDef);
+        }
+
+        // last, interaction with pe
+        return handleProcEngine(procParamWrapper, procInst);
     }
 
     private ProcInst addProcInst(ProcParamWrapper procParamWrapper, ProcDef procDef) {
@@ -202,12 +213,7 @@ public class ProcCoreServiceImpl implements ProcCoreService {
                 .setCreatorId(procParamWrapper.getUserId())
                 .setBusinessKey(procParamWrapper.getFlowNo())
                 .setVars(vars);
-        String procInstId = procEngineService.startProcess(start);
-
-        ProcBaseService finalService = service;
-        threadPoolTaskExecutor.execute(() -> finalService.afterCreate(procParamWrapper));
-
-        return procInstId;
+        return procEngineService.startProcess(start);
     }
 
     private void startValidate(ProcParamWrapper procParamWrapper) {
@@ -225,14 +231,11 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     private StringBuilder validateProcDefAndUser(ProcParamWrapper procParamWrapper) {
         StringBuilder sb = new StringBuilder();
 
-        if (StringUtil.isBlank(procParamWrapper.getProcDefKey())) {
-            StringUtil.append(sb, "Process definition key is required");
-        } else {
-            ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
-            if (null == procDef) {
-                throw new ParamException("Process definition key not exist");
-            }
+        ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());
+        if (null == procDef) {
+            throw new ParamException("Process definition key not exist");
         }
+
         if (StringUtil.isBlank(procParamWrapper.getUserId())) {
             StringUtil.append(sb, "User id is required");
         }

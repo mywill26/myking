@@ -238,7 +238,7 @@ public class ProcQueryServiceImpl implements ProcQueryService {
     }
 
     @Override
-    public FullWrapper buildFullFlowNo(String flowNo) {
+    public FullWrapper buildFullByFlowNo(String flowNo) {
         FullWrapper fullWrapper = new FullWrapper();
 
         ProcInst procInst = getProcInstByFlowNo(flowNo);
