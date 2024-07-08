@@ -25,6 +25,8 @@ public class ApproveView {
 
     private String nodeTips;
 
+    private String approveName;
+
     private Boolean approve;
 
     private Boolean rejectPrevious;

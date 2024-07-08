@@ -292,6 +292,7 @@ public class ProcViewServiceImpl implements ProcViewService {
         ProcDef procDef = procDefService.getByKey(procInst.getProcDefKey());
         approveView.setProcDesc(procDef.getDescription());
         approveView.setNodeTips(procNode.getTips());
+        approveView.setApproveName(procNode.getApproveName());
         approveView.setApprove(procNode.getApprove());
         approveView.setRejectPrevious(procNode.getRejectPrevious());
         approveView.setRejectFirst(procNode.getRejectFirst());

@@ -13,7 +13,6 @@ import com.mycx26.base.process.service.validate.ProcCreateSubValidator;
 import com.mycx26.base.service.JdbcService;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.Iterables;
-import com.mycx26.base.util.ObjectUtil;
 import com.mycx26.base.util.SpringUtil;
 import com.mycx26.base.util.StringUtil;
 import org.springframework.stereotype.Service;
@@ -49,18 +48,20 @@ public class ProcFormServiceImpl implements ProcFormService {
             throw new DataException("Form columns config error: "  + mainForm);
         }
 
-        StringBuilder error = new StringBuilder();
-        List<String> colNames = new ArrayList<>(cols.size());
-        List<Object> values = new ArrayList<>(cols.size());
         Map<String, Object> mainFormMap = procParamWrapper.getMainForm();
         // general put flow number
         mainFormMap.put(ProcConstant.FLOW_NO, procParamWrapper.getFlowNo());
+        mainFormRequiredValidate(mainFormMap, cols);
 
+        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
+        if (procBaseService instanceof ProcCreateMainValidator) {
+            ((ProcCreateMainValidator)procBaseService).validateMainForm(procParamWrapper);
+        }
+
+        List<String> colNames = new ArrayList<>(cols.size());
+        List<Object> values = new ArrayList<>(cols.size());
         cols.forEach(e -> {
             Object value = mainFormMap.get(e.getPropName());
-            if (e.getRequired() && ObjectUtil.isEmpty(value)) {
-                StringUtil.append(error, e.getPropName() + " is required");
-            }
             colNames.add(e.getColName());
             if (StringUtil.EMPTY.equals(value)) {
                 value = null;
@@ -68,17 +69,24 @@ public class ProcFormServiceImpl implements ProcFormService {
             values.add(value);
         });
 
+        jdbcService.insert(mainForm, colNames, values);
+    }
+
+    private void mainFormRequiredValidate(Map<String, Object> mainFormMap, List<ProcColumn> cols) {
+        StringBuilder error = new StringBuilder();
+
+        cols.forEach(e -> {
+            Object value = mainFormMap.get(e.getPropName());
+            if (e.getRequired() && (null == value
+                    || (value instanceof String && StringUtil.isBlank((String) value)))) {
+                StringUtil.append(error, e.getPropName() + " is required");
+            }
+        });
+
         if (error.length() > 0) {
             error.delete(error.length() - 1, error.length());
             throw new ParamException(error.toString());
         }
-
-        ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
-        if (procBaseService instanceof ProcCreateMainValidator) {
-            ((ProcCreateMainValidator)procBaseService).validateMainForm(procParamWrapper);
-        }
-
-        jdbcService.insert(mainForm, colNames, values);
     }
 
     @Override
@@ -97,7 +105,7 @@ public class ProcFormServiceImpl implements ProcFormService {
 
         // required validate
         List<Map<String, Object>> subItems = procParamWrapper.getSubItems();
-        requiredValidate(subItems, cols, procParamWrapper.getFlowNo());
+        subFormRequiredValidate(subItems, cols, procParamWrapper.getFlowNo());
 
         // business validate
         ProcBaseService procBaseService = SpringUtil.getBean2(procParamWrapper.getProcDefKey() + ProcBaseService.SUFFIX);
@@ -122,7 +130,7 @@ public class ProcFormServiceImpl implements ProcFormService {
         jdbcService.insertBatch(subForm, cols.stream().map(ProcColumn::getColName).collect(Collectors.toList()), valueList);
     }
 
-    private void requiredValidate(List<Map<String, Object>> subItems, List<ProcColumn> cols, String flowNo) {
+    private void subFormRequiredValidate(List<Map<String, Object>> subItems, List<ProcColumn> cols, String flowNo) {
         StringBuilder error = new StringBuilder();
         Iterables.foreach(subItems, (i, item) -> {
             // general put flow number
@@ -130,7 +138,7 @@ public class ProcFormServiceImpl implements ProcFormService {
             cols.forEach(col -> {
                 Object value = item.get(col.getPropName());
                 if (col.getRequired() && (null == value
-                        || (value instanceof String && StringUtil.isBlank((CharSequence) value)))) {
+                        || (value instanceof String && StringUtil.isBlank((String) value)))) {
                     StringUtil.append(error, (i + 1) + " row " + col.getPropName() + " is required");
                 }
             });
