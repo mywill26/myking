@@ -1,12 +1,10 @@
 package com.mycx26.base.process.service.impl;
 
-import com.mycx26.base.exception.base.AppException;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.service.ProcBaseService;
 import com.mycx26.base.process.service.ProcDefService;
 import com.mycx26.base.process.service.ProcEngineService;
-import com.mycx26.base.process.service.ProcExtendedService;
 import com.mycx26.base.process.service.ProcFormService;
 import com.mycx26.base.process.service.ProcInstService;
 import com.mycx26.base.process.service.ProcLockService;
@@ -15,7 +13,6 @@ import com.mycx26.base.process.service.ProcQueryService;
 import com.mycx26.base.process.service.bo.ProcParamWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -51,9 +48,6 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     @Resource
     protected ProcNodeService procNodeService;
 
-    @Resource
-    protected ProcExtendedService procExtendedService;
-
     @Override
     public Map<String, Object> setStartVar(ProcParamWrapper procParamWrapper) {
         return Collections.emptyMap();
@@ -87,14 +81,9 @@ public class ProcBaseServiceImpl extends ProcBaseService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void cancelHandle(String procInstId) {
         ProcInst procInst = procQueryService.getProcInstByInstId(procInstId);
-        boolean flag = procExtendedService.isCancel(procInst);
-        if (!flag) {
-            throw new AppException("Process instance can't cancel");
-        }
 
         procInstService.cancel(procInstId);
         ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
@@ -104,6 +93,6 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     }
 
     @Override
-    public void afterCancelHandle(String procInstId) {
+    public void afterCancel(String procInstId) {
     }
 }

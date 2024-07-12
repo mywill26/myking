@@ -14,12 +14,12 @@ import com.mycx26.base.process.service.ProcLockService;
 import com.mycx26.base.process.service.ProcQueryService;
 import com.mycx26.base.service.JdbcService;
 import com.mycx26.base.service.base.impl.BaseServiceImpl;
+import com.mycx26.base.service.transaction.TransactionWrapper;
 import com.mycx26.base.util.CollectionUtil;
 import com.mycx26.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -60,6 +60,9 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
     @Resource
     private JdbcService jdbcService;
 
+    @Resource
+    private TransactionWrapper transactionWrapper;
+
     @Override
     public void lock(List<ProcLock> procLocks) {
         if (CollectionUtil.isEmpty(procLocks)) {
@@ -77,7 +80,6 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void unlock(List<String> resourceIds) {
         if (CollectionUtil.isEmpty(resourceIds)) {
@@ -88,10 +90,12 @@ public class ProcLockServiceImpl extends BaseServiceImpl<ProcLockMapper, ProcLoc
             return;
         }
 
-        int count = procLockMapper.delete(Wrappers.<ProcLock>lambdaUpdate().in(ProcLock::getResourceId, resourceIds));
-        if (count != collect.size()) {
-            throw new AppException("Resource unlock fail");
-        }
+        transactionWrapper.wrapRun(() -> {
+            int count = procLockMapper.delete(Wrappers.<ProcLock>lambdaUpdate().in(ProcLock::getResourceId, resourceIds));
+            if (count != collect.size()) {
+                throw new AppException("Resource unlock fail");
+            }
+        });
     }
 
     @Override

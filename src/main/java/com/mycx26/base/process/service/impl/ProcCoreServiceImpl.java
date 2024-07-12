@@ -3,6 +3,7 @@ package com.mycx26.base.process.service.impl;
 import com.mycx26.base.enump.Side;
 import com.mycx26.base.exception.DataException;
 import com.mycx26.base.exception.ParamException;
+import com.mycx26.base.exception.base.AppException;
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
 import com.mycx26.base.process.entity.ProcLock;
@@ -38,7 +39,6 @@ import com.mycx26.base.util.StringUtil;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -296,24 +296,25 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         return SpringUtil.getBean2(procNode.getNodeHandler());
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void rejectPrevious(ApproveWrapper approveWrapper) {
         rejectValidate(approveWrapper);
         ProcNodeHandler handler = preHandle(approveWrapper);
 
-        if (handler != null) {
-            handler.rejectPreviousHandle(approveWrapper);
-        }
+        transactionWrapper.wrapRun(() -> {
+            if (handler != null) {
+                handler.rejectPreviousHandle(approveWrapper);
+            }
 
-        ProcessAction processAction = new ProcessAction()
-                .setProcInstId(approveWrapper.getProcInstId())
-                .setUserId(approveWrapper.getUserId())
-                .setTaskId(approveWrapper.getTaskId())
-                .setComment(approveWrapper.getComment())
-                .setVars(null);
+            ProcessAction processAction = new ProcessAction()
+                    .setProcInstId(approveWrapper.getProcInstId())
+                    .setUserId(approveWrapper.getUserId())
+                    .setTaskId(approveWrapper.getTaskId())
+                    .setComment(approveWrapper.getComment())
+                    .setVars(null);
 
-        procEngineService.rejectPrevious(processAction);
+            procEngineService.rejectPrevious(processAction);
+        });
     }
 
     private void rejectValidate(ApproveWrapper approveWrapper) {
@@ -322,24 +323,25 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void rejectFirst(ApproveWrapper approveWrapper) {
         rejectValidate(approveWrapper);
         ProcNodeHandler handler = preHandle(approveWrapper);
 
-        if (handler != null) {
-            handler.rejectFirstHandle(approveWrapper);
-        }
+        transactionWrapper.wrapRun(() -> {
+            if (handler != null) {
+                handler.rejectFirstHandle(approveWrapper);
+            }
 
-        ProcessAction processAction = new ProcessAction()
-                .setProcInstId(approveWrapper.getProcInstId())
-                .setUserId(approveWrapper.getUserId())
-                .setTaskId(approveWrapper.getTaskId())
-                .setComment(approveWrapper.getComment())
-                .setVars(null);
+            ProcessAction processAction = new ProcessAction()
+                    .setProcInstId(approveWrapper.getProcInstId())
+                    .setUserId(approveWrapper.getUserId())
+                    .setTaskId(approveWrapper.getTaskId())
+                    .setComment(approveWrapper.getComment())
+                    .setVars(null);
 
-        procEngineService.rejectFirst(processAction);
+            procEngineService.rejectFirst(processAction);
+        });
     }
 
     private ProcInst approveValidate(ApproveWrapper approveWrapper) {
@@ -368,7 +370,6 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         return procNode;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void cancel(ApproveWrapper approveWrapper) {
         ProcInst procInst = cancelValidate(approveWrapper);
@@ -376,16 +377,20 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         if (null == service) {
             service = this.procBaseService;
         }
-        service.cancelHandle(approveWrapper.getProcInstId());
 
-        ProcessCancel processCancel = new ProcessCancel()
-                .setProcInstId(approveWrapper.getProcInstId())
-                .setCreatorId(approveWrapper.getUserId())
-                .setComment(approveWrapper.getComment());
+        ProcBaseService finalService = service;
+        transactionWrapper.wrapRun(() -> {
+            finalService.cancelHandle(approveWrapper.getProcInstId());
 
-        procEngineService.cancelProcess(processCancel);
+            ProcessCancel processCancel = new ProcessCancel()
+                    .setProcInstId(approveWrapper.getProcInstId())
+                    .setCreatorId(approveWrapper.getUserId())
+                    .setComment(approveWrapper.getComment());
 
-        threadPoolTaskExecutor.execute(() -> procBaseService.afterCancelHandle(procInst.getProcInstId()));
+            procEngineService.cancelProcess(processCancel);
+        });
+
+        threadPoolTaskExecutor.execute(() -> finalService.afterCancel(procInst.getProcInstId()));
     }
 
     private ProcInst cancelValidate(ApproveWrapper approveWrapper) {
@@ -394,26 +399,32 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getUserId()), "User id is required");
         ExpAssert.isTrue(approveWrapper.getUserId().equals(procInst.getCreatorId()), "Only creator can cancel");
 
+        boolean flag = procExtendedService.isCancel(procInst);
+        if (!flag) {
+            throw new AppException("Process instance can't cancel");
+        }
+
         return procInst;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void reassign(ReassignWrapper reassignWrapper) {
         ProcNodeHandler handler = preHandle(reassignWrapper);
-        if (handler != null) {
-            handler.reassignHandle(reassignWrapper);
-        }
-
         ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
 
-        TaskReassign reassign = new TaskReassign()
-                .setTaskId(reassignWrapper.getTaskId())
-                .setUserId(reassignWrapper.getUserId())
-                .setComment(reassignWrapper.getComment())
-                .setToUserId(reassignWrapper.getToUserId())
-                .setEngineKey(reassignWrapper.getProcDef().getEngineKey());
+        transactionWrapper.wrapRun(() -> {
+            if (handler != null) {
+                handler.reassignHandle(reassignWrapper);
+            }
 
-        procEngineService.reassign(reassign);
+            TaskReassign reassign = new TaskReassign()
+                    .setTaskId(reassignWrapper.getTaskId())
+                    .setUserId(reassignWrapper.getUserId())
+                    .setComment(reassignWrapper.getComment())
+                    .setToUserId(reassignWrapper.getToUserId())
+                    .setEngineKey(reassignWrapper.getProcDef().getEngineKey());
+
+            procEngineService.reassign(reassign);
+        });
     }
 }

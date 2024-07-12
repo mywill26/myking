@@ -62,5 +62,5 @@ public abstract class ProcBaseService {
      *
      * @param procInstId process instance id
      */
-    public abstract void afterCancelHandle(String procInstId);
+    public abstract void afterCancel(String procInstId);
 }
