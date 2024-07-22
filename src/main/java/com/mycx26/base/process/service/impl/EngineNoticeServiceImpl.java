@@ -2,8 +2,10 @@ package com.mycx26.base.process.service.impl;
 
 import com.mycx26.base.process.entity.ProcDef;
 import com.mycx26.base.process.entity.ProcInst;
+import com.mycx26.base.process.entity.ProcNode;
 import com.mycx26.base.process.service.EngineNoticeService;
 import com.mycx26.base.process.service.ProcBaseService;
+import com.mycx26.base.process.service.ProcNodeHandler;
 import com.mycx26.base.process.service.ProcQueryService;
 import com.mycx26.base.util.ExpAssert;
 import com.mycx26.base.util.SpringUtil;
@@ -37,9 +39,7 @@ public class EngineNoticeServiceImpl implements EngineNoticeService {
     }
 
     private ProcBaseService validateBase(String procInstId) {
-        ExpAssert.isFalse(StringUtil.isBlank(procInstId), "Process instance id is required");
-        ProcInst procInst = procQueryService.getProcInstByInstId(procInstId);
-        ExpAssert.isFalse(null == procInst, "Process instance not exist");
+        ProcInst procInst = validateProcInst(procInstId);
 
         ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
         ProcBaseService service = SpringUtil.getBean2(procDef.getProcDefKey() + ProcBaseService.SUFFIX);
@@ -49,9 +49,31 @@ public class EngineNoticeServiceImpl implements EngineNoticeService {
         return service;
     }
 
+    private ProcInst validateProcInst(String procInstId) {
+        ExpAssert.isFalse(StringUtil.isBlank(procInstId), "Process instance id is required");
+        ProcInst procInst = procQueryService.getProcInstByInstId(procInstId);
+        ExpAssert.isFalse(null == procInst, "Process instance not exist");
+
+        return procInst;
+    }
+
     @Override
     public void rejectFirstNotice(String procInstId) {
         ProcBaseService service = validateBase(procInstId);
         service.rejectFirstHandle(procInstId);
+    }
+
+    @Override
+    public void arriveNodeNotice(String procInstId, String nodeKey) {
+        ProcInst procInst = validateProcInst(procInstId);
+        ProcDef procDef = procQueryService.getProcDefByDefKey(procInst.getProcDefKey());
+        ProcNode procNode = procQueryService.getProcNodeByDefKeyAndNodeKey(procDef.getProcDefKey(), nodeKey);
+        ExpAssert.isFalse(null == procNode, "Process node not exist");
+
+        if (StringUtil.isNotBlank(procNode.getNodeHandler())) {
+            ProcNodeHandler nodeHandler = SpringUtil.getBean2(procNode.getNodeHandler());
+            assert nodeHandler != null;
+            nodeHandler.arrive(procInstId, nodeKey);
+        }
     }
 }

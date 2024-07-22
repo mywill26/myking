@@ -12,6 +12,10 @@ import java.util.Map;
 public abstract class DefaultNodeHandler extends ProcNodeHandler {
 
     @Override
+    public void arrive(String procInstId, String nodeKey) {
+    }
+
+    @Override
     public void approveValidate(ApproveWrapper approveWrapper) {
     }
 

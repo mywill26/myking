@@ -21,4 +21,12 @@ public interface EngineNoticeService {
      * @param procInstId process instance id
      */
     void rejectFirstNotice(String procInstId);
+
+    /**
+     * Accept arrive in node notice
+     *
+     * @param procInstId process instance id
+     * @param nodeKey node key
+     */
+    void arriveNodeNotice(String procInstId, String nodeKey);
 }

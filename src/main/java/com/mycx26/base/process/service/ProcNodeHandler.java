@@ -38,6 +38,14 @@ public abstract class ProcNodeHandler {
     protected ProcUpdateService procUpdateService;
 
     /**
+     * Asynchronous callback when arrive in node.
+     *
+     * @param procInstId process instance id
+     * @param nodeKey node key
+     */
+    public abstract void arrive(String procInstId, String nodeKey);
+
+    /**
      * approve validate
      *
      * @param approveWrapper approve wrapper
@@ -74,7 +82,7 @@ public abstract class ProcNodeHandler {
     public abstract Map<String, Object> handleVars(ApproveWrapper approveWrapper);
 
     /**
-     * Asynchronous callback after process approve.
+     * Asynchronous callback after node approve.
      * The execution failure should not affect the main process.
      *
      * @param approveWrapper approve wrapper
