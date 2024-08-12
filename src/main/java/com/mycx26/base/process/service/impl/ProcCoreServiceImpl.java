@@ -410,12 +410,13 @@ public class ProcCoreServiceImpl implements ProcCoreService {
     @Override
     public void reassign(ReassignWrapper reassignWrapper) {
         ProcNodeHandler handler = preHandle(reassignWrapper);
-        ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
 
         transactionWrapper.wrapRun(() -> {
             if (handler != null) {
                 handler.reassignHandle(reassignWrapper);
             }
+
+            ExpAssert.isFalse(StringUtil.isBlank(reassignWrapper.getToUserId()), "To user id is required");
 
             TaskReassign reassign = new TaskReassign()
                     .setTaskId(reassignWrapper.getTaskId())
