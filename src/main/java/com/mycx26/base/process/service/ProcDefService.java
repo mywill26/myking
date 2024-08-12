@@ -33,4 +33,12 @@ public interface ProcDefService extends BaseService<ProcDef> {
     ProcDef getByEngineKey(String engineKey);
 
     ProcDef getByEngineId(String engineId);
+
+    /**
+     * get by flow no prefix
+     *
+     * @param flowNoPrefix flow no prefix
+     * @return process definition
+     */
+    ProcDef getByFlowNoPrefix(String flowNoPrefix);
 }

@@ -172,4 +172,14 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
 
         return getOne(new QueryWrapper<ProcDef>().eq("engine_id", engineId).eq("yn", Yn.YES.getCode()));
     }
+
+    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#flowNoPrefix", unless = "null == #result")
+    @Override
+    public ProcDef getByFlowNoPrefix(String flowNoPrefix) {
+        if (StringUtil.isBlank(flowNoPrefix)) {
+            return null;
+        }
+
+        return getOne(Wrappers.<ProcDef>lambdaQuery().eq(ProcDef::getFlowNoPrefix, flowNoPrefix));
+    }
 }
