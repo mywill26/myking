@@ -133,7 +133,8 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
                 e -> new SelectOption().setLabel(e.getProcDefName()).setCode(e.getProcDefKey()));
     }
 
-    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#procDefKey", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#procDefKey",
+            condition = "#procDefKey != null", unless = "null == #result")
     @Override
     public ProcDef getByKey(String procDefKey) {
         if (StringUtil.isBlank(procDefKey)) {
@@ -153,7 +154,8 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
         return null;
     }
 
-    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#engineKey", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#engineKey",
+            condition = "#engineKey != null", unless = "null == #result")
     @Override
     public ProcDef getByEngineKey(String engineKey) {
         if (StringUtil.isBlank(engineKey)) {
@@ -163,7 +165,8 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
         return getOne(new QueryWrapper<ProcDef>().eq("engine_key", engineKey).eq("yn", Yn.YES.getCode()));
     }
 
-    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#engineId", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#engineId",
+            condition = "#engineId != null", unless = "null == #result")
     @Override
     public ProcDef getByEngineId(String engineId) {
         if (StringUtil.isBlank(engineId)) {
@@ -173,7 +176,8 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
         return getOne(new QueryWrapper<ProcDef>().eq("engine_id", engineId).eq("yn", Yn.YES.getCode()));
     }
 
-    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#flowNoPrefix", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_DEF, key="#flowNoPrefix",
+            condition = "#flowNoPrefix != null", unless = "null == #result")
     @Override
     public ProcDef getByFlowNoPrefix(String flowNoPrefix) {
         if (StringUtil.isBlank(flowNoPrefix)) {

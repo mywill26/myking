@@ -25,7 +25,7 @@ import java.util.List;
 public class CombineViewServiceImpl extends ServiceImpl<CombineViewMapper, CombineView> implements CombineViewService {
 
     @Cacheable(value = ProcCacheConstant.COMBINE_VIEW, key="#viewKey1",
-            condition = "#viewKey1 != null", unless = "null == #result")
+            condition = "#viewKey1 != null", unless = "null == #result || #result.isEmpty()")
     @Override
     public List<CombineView> getByViewKey1(String viewKey1) {
         if (StringUtil.isBlank(viewKey1)) {

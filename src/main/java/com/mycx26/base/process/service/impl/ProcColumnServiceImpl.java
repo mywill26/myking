@@ -23,7 +23,8 @@ import java.util.List;
 @Service
 public class ProcColumnServiceImpl extends ServiceImpl<ProcColumnMapper, ProcColumn> implements ProcColumnService {
 
-    @Cacheable(value = ProcCacheConstant.PROC_COL, key="#tblName", unless = "null == #result")
+    @Cacheable(value = ProcCacheConstant.PROC_COL, key="#tblName",
+            condition = "#tblName != null", unless = "null == #result || #result.isEmpty()")
     @Override
     public List<ProcColumn> getByTblName(String tblName) {
         return list(new QueryWrapper<ProcColumn>().eq("tbl_name", tblName).eq("yn", Yn.YES.getCode()));

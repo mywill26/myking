@@ -25,7 +25,8 @@ import java.util.List;
 @Service
 public class ProcViewColServiceImpl extends BaseServiceImpl<ProcViewColMapper, ProcViewCol> implements ProcViewColService {
 
-    @Cacheable(value = ProcCacheConstant.VIEW_COL, key="#viewKey", unless = "null == #result || #result.isEmpty()")
+    @Cacheable(value = ProcCacheConstant.VIEW_COL, key="#viewKey",
+            condition = "#viewKey != null", unless = "null == #result || #result.isEmpty()")
     @Override
     public List<ProcViewCol> getByViewKey(String viewKey) {
         if (StringUtil.isBlank(viewKey)) {

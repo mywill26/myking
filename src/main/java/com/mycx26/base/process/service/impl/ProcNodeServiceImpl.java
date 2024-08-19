@@ -160,7 +160,7 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
     }
 
     @Cacheable(value = ProcCacheConstant.NODE_FIRST, cacheManager = CacheConstant.CENTER_MANAGER,
-            key="#procDefKey", unless = "null == #result")
+            key="#procDefKey", condition = "#procDefKey != null", unless = "null == #result")
     @Override
     public ProcNode getFirst(String procDefKey) {
         if (StringUtil.isBlank(procDefKey)) {
@@ -225,7 +225,7 @@ public class ProcNodeServiceImpl extends ServiceImpl<ProcNodeMapper, ProcNode> i
     }
 
     @Cacheable(value = ProcCacheConstant.NODE_CATEGORY, key="#categoryCode",
-            unless = "null == #result || #result.isEmpty()")
+            condition = "#categoryCode != null", unless = "null == #result || #result.isEmpty()")
     @Override
     public List<ProcNode> getByCategoryCode(String categoryCode) {
         if (StringUtil.isBlank(categoryCode)) {
