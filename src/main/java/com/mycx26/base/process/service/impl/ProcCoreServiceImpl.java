@@ -372,28 +372,17 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     @Override
     public void cancel(ApproveWrapper approveWrapper) {
-        ProcInst procInst = cancelValidate(approveWrapper);
-        ProcBaseService service = SpringUtil.getBean2(procInst.getProcDefKey() + ProcBaseService.SUFFIX);
-        if (null == service) {
-            service = this.procBaseService;
-        }
+        cancelValidate(approveWrapper);
 
-        ProcBaseService finalService = service;
-        transactionWrapper.wrapRun(() -> {
-            finalService.cancelHandle(approveWrapper.getProcInstId());
+        ProcessCancel processCancel = new ProcessCancel()
+                .setProcInstId(approveWrapper.getProcInstId())
+                .setCreatorId(approveWrapper.getUserId())
+                .setComment(approveWrapper.getComment());
 
-            ProcessCancel processCancel = new ProcessCancel()
-                    .setProcInstId(approveWrapper.getProcInstId())
-                    .setCreatorId(approveWrapper.getUserId())
-                    .setComment(approveWrapper.getComment());
-
-            procEngineService.cancelProcess(processCancel);
-        });
-
-        threadPoolTaskExecutor.execute(() -> finalService.afterCancel(procInst.getProcInstId()));
+        procEngineService.cancelProcess(processCancel);
     }
 
-    private ProcInst cancelValidate(ApproveWrapper approveWrapper) {
+    private void cancelValidate(ApproveWrapper approveWrapper) {
         ProcInst procInst = procInstService.getByProcInstId(approveWrapper.getProcInstId());
         ExpAssert.isFalse(null == procInst, "Process instance not exist");
         ExpAssert.isFalse(StringUtil.isBlank(approveWrapper.getUserId()), "User id is required");
@@ -403,8 +392,6 @@ public class ProcCoreServiceImpl implements ProcCoreService {
         if (!flag) {
             throw new AppException("Process instance can't cancel");
         }
-
-        return procInst;
     }
 
     @Override

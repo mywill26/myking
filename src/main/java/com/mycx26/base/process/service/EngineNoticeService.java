@@ -23,6 +23,13 @@ public interface EngineNoticeService {
     void rejectFirstNotice(String procInstId);
 
     /**
+     * Accept process cancel notice.
+     *
+     * @param procInstId process instance id
+     */
+    void cancelNotice(String procInstId);
+
+    /**
      * Accept arrive in node notice
      *
      * @param procInstId process instance id

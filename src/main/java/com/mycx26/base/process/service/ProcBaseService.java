@@ -50,6 +50,14 @@ public abstract class ProcBaseService {
     public abstract void rejectFirstHandle(String procInstId);
 
     /**
+     * Asynchronous callback after process is rejected to first node.
+     * The execution failure should not affect the main process.
+     *
+     * @param procInstId process instance id
+     */
+    public abstract void afterRejectFirst(String procInstId);
+
+    /**
      * handle when process is cancelled
      *
      * @param procInstId process instance id

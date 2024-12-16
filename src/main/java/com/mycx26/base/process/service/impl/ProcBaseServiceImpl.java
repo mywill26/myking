@@ -82,6 +82,10 @@ public class ProcBaseServiceImpl extends ProcBaseService {
     }
 
     @Override
+    public void afterRejectFirst(String procInstId) {
+    }
+
+    @Override
     public void cancelHandle(String procInstId) {
         ProcInst procInst = procQueryService.getProcInstByInstId(procInstId);
 

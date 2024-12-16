@@ -35,6 +35,7 @@ public class EngineNoticeServiceImpl implements EngineNoticeService {
     public void endNotice(String procInstId) {
         ProcBaseService service = validateBase(procInstId);
         service.endPostHandle(procInstId);
+
         threadPoolTaskExecutor.execute(() -> service.afterEnd(procInstId));
     }
 
@@ -61,6 +62,16 @@ public class EngineNoticeServiceImpl implements EngineNoticeService {
     public void rejectFirstNotice(String procInstId) {
         ProcBaseService service = validateBase(procInstId);
         service.rejectFirstHandle(procInstId);
+
+        threadPoolTaskExecutor.execute(() -> service.afterRejectFirst(procInstId));
+    }
+
+    @Override
+    public void cancelNotice(String procInstId) {
+        ProcBaseService service = validateBase(procInstId);
+        service.cancelHandle(procInstId);
+
+        threadPoolTaskExecutor.execute(() -> service.afterCancel(procInstId));
     }
 
     @Override
