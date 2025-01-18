@@ -93,6 +93,12 @@ public class ProcDef implements Serializable {
     private Boolean lightView;
 
     /**
+     * 是否显示待办
+     */
+    @TableField("is_show_todo")
+    private Boolean showTodo;
+
+    /**
      * 描述
      */
     private String description;

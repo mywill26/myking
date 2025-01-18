@@ -118,7 +118,9 @@ public class ProcViewServiceImpl implements ProcViewService {
     @Override
     public List<ToDoHeader> getToDoHeaders(String userId) {
         Map<String, ToDoHeader> collect = procDefService.list(Wrappers.<ProcDef>lambdaQuery()
-                .eq(ProcDef::getInternal, Yn.YES.getCode()).orderByAsc(ProcDef::getOrderNo)).stream()
+                        .eq(ProcDef::getInternal, Yn.YES.getCode())
+                        .eq(ProcDef::getShowTodo, Yn.YES.getCode())
+                        .orderByAsc(ProcDef::getOrderNo)).stream()
                 .collect(Collectors.toMap(ProcDef::getEngineKey,
                         v -> new ToDoHeader().setProcDefKey(v.getProcDefKey()).setProcDefName(v.getProcDefName()).setCount(0),
                         (e1, e2) -> e2, LinkedHashMap::new
