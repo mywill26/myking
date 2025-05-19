@@ -30,6 +30,7 @@ import com.mycx26.base.process.service.bo.ProcessStart;
 import com.mycx26.base.process.service.bo.ReassignWrapper;
 import com.mycx26.base.process.service.bo.TaskReassign;
 import com.mycx26.base.process.service.handler.ProcCreatePreHandler;
+import com.mycx26.base.process.service.handler.ProcLifeHandler;
 import com.mycx26.base.service.ExternalUserService;
 import com.mycx26.base.service.transaction.TransactionWrapper;
 import com.mycx26.base.util.CollectionUtil;
@@ -92,6 +93,11 @@ public class ProcCoreServiceImpl implements ProcCoreService {
 
     @Override
     public String create(ProcParamWrapper procParamWrapper) {
+        ProcLifeHandler lifeHandler = SpringUtil.getBean2(ProcLifeHandler.class);
+        if (lifeHandler != null) {
+            lifeHandler.beforeCreate(procParamWrapper);
+        }
+
         createBaseValidate(procParamWrapper);
 
         ProcDef procDef = procDefService.getByKey(procParamWrapper.getProcDefKey());

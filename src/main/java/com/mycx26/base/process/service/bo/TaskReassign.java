@@ -24,4 +24,6 @@ public class TaskReassign {
      * 引擎key
      */
     private String engineKey;
+
+    private String procInstId;
 }
