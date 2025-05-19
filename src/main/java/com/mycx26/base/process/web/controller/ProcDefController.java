@@ -55,4 +55,9 @@ public class ProcDefController {
     public Message<ProcDef> get(String procDefKey) {
         return Message.success(procDefService.getByKey(procDefKey));
     }
+
+    @RequestMapping("getAllQueries")
+    public Message<List<SelectOption>> getAllQueries() {
+        return Message.success(procDefService.getAllQueries());
+    }
 }

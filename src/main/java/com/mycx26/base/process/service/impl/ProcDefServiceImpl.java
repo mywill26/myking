@@ -186,4 +186,13 @@ public class ProcDefServiceImpl extends BaseServiceImpl<ProcDefMapper, ProcDef> 
 
         return getOne(Wrappers.<ProcDef>lambdaQuery().eq(ProcDef::getFlowNoPrefix, flowNoPrefix));
     }
+
+    @Override
+    public List<SelectOption> getAllQueries() {
+        return list(Wrappers.<ProcDef>lambdaQuery()
+                .eq(ProcDef::getInternal, true)
+                .eq(ProcDef::getShowQuery, true),
+                e -> new SelectOption().setLabel(e.getProcDefName()).setCode(e.getProcDefKey())
+        );
+    }
 }

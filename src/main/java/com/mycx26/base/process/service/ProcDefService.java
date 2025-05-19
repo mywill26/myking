@@ -41,4 +41,11 @@ public interface ProcDefService extends BaseService<ProcDef> {
      * @return process definition
      */
     ProcDef getByFlowNoPrefix(String flowNoPrefix);
+
+    /**
+     * get all process definition options where can be process queried
+     *
+     * @return process definition options
+     */
+    List<SelectOption> getAllQueries();
 }

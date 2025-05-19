@@ -99,6 +99,12 @@ public class ProcDef implements Serializable {
     private Boolean showTodo;
 
     /**
+     * 是否显示查询
+     */
+    @TableField("is_show_query")
+    private Boolean showQuery;
+
+    /**
      * 描述
      */
     private String description;
